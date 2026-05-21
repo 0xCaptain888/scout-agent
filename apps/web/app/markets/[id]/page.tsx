@@ -95,7 +95,6 @@ export default function MarketDetailPage() {
                 style={selectedOutcome === o.key ? {
                   borderColor: o.color + '60',
                   boxShadow: `0 0 20px ${o.color}20`,
-                  ringColor: o.color,
                 } : undefined}
               >
                 <div className="text-sm text-muted uppercase tracking-wider mb-2">{o.key}</div>

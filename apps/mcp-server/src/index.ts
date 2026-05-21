@@ -94,22 +94,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: TOOLS };
 });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, async (request: any): Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }> => {
   const { name, arguments: args } = request.params;
   const handler = TOOL_HANDLERS[name];
   if (!handler) {
     return {
-      content: [{ type: "text", text: `Unknown tool: ${name}` }],
+      content: [{ type: "text" as const, text: `Unknown tool: ${name}` }],
       isError: true,
     };
   }
 
   try {
-    return await handler(args ?? {});
+    return await handler(args ?? {}) as any;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return {
-      content: [{ type: "text", text: `Error executing ${name}: ${message}` }],
+      content: [{ type: "text" as const, text: `Error executing ${name}: ${message}` }],
       isError: true,
     };
   }

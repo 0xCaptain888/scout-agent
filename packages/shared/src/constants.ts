@@ -45,14 +45,18 @@ export const BLOCK_EXPLORER_URLS = {
 
 export const CONTRACT_ADDRESSES = {
   [xLayerMainnet.id]: {
-    agentNFT: "" as `0x${string}`,
-    bettingMarket: "" as `0x${string}`,
-    treasury: "" as `0x${string}`,
+    mockUSDT: "0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D" as `0x${string}`,
+    agentRegistry: "0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5" as `0x${string}`,
+    rankingBoard: "0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1" as `0x${string}`,
+    predictionMarket: "0x7058132Ba4aE19983c61590644F2943A3B7fDf80" as `0x${string}`,
+    matchOracle: "0x494960e21058290BB2F1328b6b837dCF26aA5DCb" as `0x${string}`,
   },
   [xLayerTestnet.id]: {
-    agentNFT: "" as `0x${string}`,
-    bettingMarket: "" as `0x${string}`,
-    treasury: "" as `0x${string}`,
+    mockUSDT: "0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D" as `0x${string}`,
+    agentRegistry: "0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5" as `0x${string}`,
+    rankingBoard: "0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1" as `0x${string}`,
+    predictionMarket: "0x7058132Ba4aE19983c61590644F2943A3B7fDf80" as `0x${string}`,
+    matchOracle: "0x494960e21058290BB2F1328b6b837dCF26aA5DCb" as `0x${string}`,
   },
 } as const;
 
