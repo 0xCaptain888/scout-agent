@@ -84,10 +84,10 @@ contract PredictionMarket is IPredictionMarket, Ownable {
             msg.sender == agentOwner || msg.sender == agentWallet,
             "Not agent owner or wallet"
         );
-        require(!agentRegistry.isPaused(agentId), "Agent is paused");
+        if (agentRegistry.isPaused(agentId)) revert Errors.AgentIsPaused();
 
         // Require no existing bet (one bet per market per agent)
-        if (_bets[marketId][agentId].amount > 0) revert Errors.BettingClosed();
+        if (_bets[marketId][agentId].amount > 0) revert Errors.AlreadyBet();
 
         // Calculate protocol fee
         uint256 fee = (amount * protocolFeeBps) / 10000;

@@ -8,6 +8,7 @@ import "../src/RankingBoard.sol";
 import "../src/MatchOracle.sol";
 import "../src/MockUSDT.sol";
 import "../src/interfaces/IPredictionMarket.sol";
+import "../src/libraries/Errors.sol";
 
 contract MatchOracleTest is Test {
     AgentRegistry public registry;
@@ -83,7 +84,7 @@ contract MatchOracleTest is Test {
         oracle.registerMatch(matchId, marketId);
 
         vm.warp(startTime + 3 hours); // Only 3 hours, need 4+
-        vm.expectRevert("Too early to resolve");
+        vm.expectRevert(Errors.TooEarlyToResolve.selector);
         oracle.resolveMatch(matchId, 2, 1);
     }
 
@@ -95,7 +96,7 @@ contract MatchOracleTest is Test {
         vm.warp(startTime + 4 hours + 1);
         oracle.resolveMatch(matchId, 2, 1);
 
-        vm.expectRevert("Already resolved");
+        vm.expectRevert(Errors.AlreadyResolved.selector);
         oracle.resolveMatch(matchId, 2, 1);
     }
 
@@ -112,7 +113,7 @@ contract MatchOracleTest is Test {
     }
 
     function test_scoreOf_notResolved() public {
-        vm.expectRevert("Not resolved");
+        vm.expectRevert(Errors.MarketNotResolved.selector);
         oracle.scoreOf(matchId);
     }
 }

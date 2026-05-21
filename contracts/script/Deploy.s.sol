@@ -7,6 +7,7 @@ import "../src/AgentRegistry.sol";
 import "../src/RankingBoard.sol";
 import "../src/PredictionMarket.sol";
 import "../src/MatchOracle.sol";
+import "../src/AgentVault.sol";
 
 contract Deploy is Script {
     function run() external {
@@ -34,6 +35,9 @@ contract Deploy is Script {
         // 5. Deploy MatchOracle
         MatchOracle oracle = new MatchOracle(address(market));
 
+        // 5b. Deploy AgentVault (batch settlement helper)
+        AgentVault vault = new AgentVault(address(market));
+
         // 6. Wire contracts together
         registry.setMarket(address(market));
         market.setOracle(address(oracle));
@@ -53,7 +57,8 @@ contract Deploy is Script {
             '  "AgentRegistry": "', vm.toString(address(registry)), '",\n',
             '  "RankingBoard": "', vm.toString(address(ranking)), '",\n',
             '  "PredictionMarket": "', vm.toString(address(market)), '",\n',
-            '  "MatchOracle": "', vm.toString(address(oracle)), '"\n',
+            '  "MatchOracle": "', vm.toString(address(oracle)), '",\n',
+            '  "AgentVault": "', vm.toString(address(vault)), '"\n',
             '}'
         ));
         vm.writeFile("deployments/xlayer-testnet.json", json);

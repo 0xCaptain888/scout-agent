@@ -5,6 +5,9 @@ library Errors {
     error NotAgentOwner();
     error InvalidStrategy();
     error InsufficientAllowance();
+    error InsufficientBankroll();
+    error InsufficientMintFee();
+    error AgentIsPaused();
     error MarketNotFound();
     error MarketAlreadyResolved();
     error MarketNotResolved();
@@ -12,5 +15,9 @@ library Errors {
     error BettingClosed();
     error ZeroAmount();
     error NotOracle();
+    error NotMarket();
     error AlreadyClaimed();
+    error AlreadyBet();
+    error AlreadyResolved();
+    error TooEarlyToResolve();
 }

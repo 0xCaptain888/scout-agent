@@ -6,6 +6,8 @@ import "./interfaces/IMatchOracle.sol";
 import "./interfaces/IPredictionMarket.sol";
 import "./PredictionMarket.sol";
 
+import "./libraries/Errors.sol";
+
 contract MatchOracle is IMatchOracle, Ownable {
     PredictionMarket public predictionMarket;
 
@@ -19,8 +21,6 @@ contract MatchOracle is IMatchOracle, Ownable {
     mapping(bytes32 => uint256) public marketIds;
     mapping(bytes32 => Score) private _scores;
 
-    event MatchResolved(bytes32 indexed matchId, uint8 homeScore, uint8 awayScore, IPredictionMarket.Outcome outcome);
-
     constructor(address _predictionMarket) Ownable(msg.sender) {
         predictionMarket = PredictionMarket(_predictionMarket);
     }
@@ -32,12 +32,12 @@ contract MatchOracle is IMatchOracle, Ownable {
 
     /// @notice Resolve a match with scores; requires 4 hours after startTime
     function resolveMatch(bytes32 matchId, uint8 homeScore, uint8 awayScore) external override onlyOwner {
-        require(!_scores[matchId].resolved, "Already resolved");
+        if (_scores[matchId].resolved) revert Errors.AlreadyResolved();
 
         uint256 marketId = marketIds[matchId];
         IPredictionMarket.Market memory market = predictionMarket.getMarket(marketId);
-        require(market.startTime > 0, "Market not found");
-        require(block.timestamp > market.startTime + 4 hours, "Too early to resolve");
+        if (market.startTime == 0) revert Errors.MarketNotFound();
+        if (block.timestamp <= market.startTime + 4 hours) revert Errors.TooEarlyToResolve();
 
         // Determine outcome
         IPredictionMarket.Outcome outcome;
@@ -59,7 +59,7 @@ contract MatchOracle is IMatchOracle, Ownable {
 
     function scoreOf(bytes32 matchId) external view override returns (uint8 homeScore, uint8 awayScore) {
         Score memory s = _scores[matchId];
-        require(s.resolved, "Not resolved");
+        if (!s.resolved) revert Errors.MarketNotResolved();
         return (s.home, s.away);
     }
 }

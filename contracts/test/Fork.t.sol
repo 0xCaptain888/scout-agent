@@ -7,6 +7,7 @@ import "../src/AgentRegistry.sol";
 import "../src/RankingBoard.sol";
 import "../src/PredictionMarket.sol";
 import "../src/MatchOracle.sol";
+import "../src/interfaces/IPredictionMarket.sol";
 
 /**
  * @title ForkTest
@@ -120,11 +121,11 @@ contract ForkTest is Test {
 
         // Place bet
         vm.prank(user);
-        market.placeBet(marketId, agentId, PredictionMarket.Outcome.HOME, 100e6);
+        market.placeBet(marketId, agentId, IPredictionMarket.Outcome.HOME, 100e6);
 
         // Verify bet recorded
-        (PredictionMarket.Outcome betOutcome, uint256 betAmount) = market.getBet(marketId, agentId);
-        assertEq(uint8(betOutcome), uint8(PredictionMarket.Outcome.HOME));
+        (IPredictionMarket.Outcome betOutcome, uint256 betAmount) = market.getBet(marketId, agentId);
+        assertEq(uint8(betOutcome), uint8(IPredictionMarket.Outcome.HOME));
         assertTrue(betAmount > 0);
     }
 }

@@ -38,16 +38,16 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         usdt = IERC20(_usdt);
     }
 
-    function setMarket(address _market) external onlyOwner {
+    function setMarket(address _market) external override onlyOwner {
         market = _market;
     }
 
-    function setMintFee(uint256 fee) external onlyOwner {
+    function setMintFee(uint256 fee) external override onlyOwner {
         mintFee = fee;
     }
 
     function mintAgent(uint256 gene) external payable override returns (uint256 tokenId) {
-        if (msg.value < mintFee) revert Errors.InsufficientAllowance();
+        if (msg.value < mintFee) revert Errors.InsufficientMintFee();
         if (!StrategyGene.validate(gene)) revert Errors.InvalidStrategy();
 
         tokenId = _nextTokenId++;
@@ -70,20 +70,20 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
 
     function withdrawBankroll(uint256 tokenId, uint256 amount) external override onlyAgentOwner(tokenId) {
         if (amount == 0) revert Errors.ZeroAmount();
-        if (_bankrolls[tokenId] < amount) revert Errors.InsufficientAllowance();
+        if (_bankrolls[tokenId] < amount) revert Errors.InsufficientBankroll();
         _bankrolls[tokenId] -= amount;
         usdt.safeTransfer(msg.sender, amount);
         emit BankrollWithdrawn(tokenId, amount);
     }
 
-    function deductBankroll(uint256 tokenId, uint256 amount) external {
-        if (msg.sender != market) revert Errors.NotOracle();
-        if (_bankrolls[tokenId] < amount) revert Errors.InsufficientAllowance();
+    function deductBankroll(uint256 tokenId, uint256 amount) external override {
+        if (msg.sender != market) revert Errors.NotMarket();
+        if (_bankrolls[tokenId] < amount) revert Errors.InsufficientBankroll();
         _bankrolls[tokenId] -= amount;
     }
 
-    function addBankroll(uint256 tokenId, uint256 amount) external {
-        if (msg.sender != market) revert Errors.NotOracle();
+    function addBankroll(uint256 tokenId, uint256 amount) external override {
+        if (msg.sender != market) revert Errors.NotMarket();
         _bankrolls[tokenId] += amount;
     }
 
@@ -112,7 +112,7 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         return _paused[tokenId];
     }
 
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _nextTokenId;
     }
 
@@ -215,7 +215,7 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
     // --- Overrides ---
 
     function supportsInterface(bytes4 interfaceId)
-        public view override(ERC721, ERC721URIStorage) returns (bool)
+        public view override(ERC721, ERC721URIStorage, IERC165) returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }

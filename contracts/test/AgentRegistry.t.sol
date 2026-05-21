@@ -48,7 +48,7 @@ contract AgentRegistryTest is Test {
     function test_mintAgent_withFee() public {
         registry.setMintFee(0.01 ether);
         vm.prank(alice);
-        vm.expectRevert(Errors.InsufficientAllowance.selector);
+        vm.expectRevert(Errors.InsufficientMintFee.selector);
         registry.mintAgent(validGene); // no value sent
 
         vm.prank(alice);
@@ -113,7 +113,7 @@ contract AgentRegistryTest is Test {
         usdt.approve(address(registry), 500e6);
         registry.depositBankroll(tokenId, 500e6);
 
-        vm.expectRevert(Errors.InsufficientAllowance.selector);
+        vm.expectRevert(Errors.InsufficientBankroll.selector);
         registry.withdrawBankroll(tokenId, 600e6);
         vm.stopPrank();
     }

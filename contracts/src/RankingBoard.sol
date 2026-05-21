@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IRankingBoard.sol";
+import "./libraries/Errors.sol";
 
 contract RankingBoard is IRankingBoard, Ownable {
     struct Stats {
@@ -18,18 +19,16 @@ contract RankingBoard is IRankingBoard, Ownable {
     uint256[] public trackedAgents;
     mapping(uint256 => bool) private _isTracked;
 
-    event StatsUpdated(uint256 indexed agentId, bool won, int256 pnl);
-
     constructor(address _agentRegistry) Ownable(msg.sender) {
         agentRegistry = _agentRegistry;
     }
 
-    function setPredictionMarket(address _predictionMarket) external onlyOwner {
+    function setPredictionMarket(address _predictionMarket) external override onlyOwner {
         predictionMarket = _predictionMarket;
     }
 
     function updateStats(uint256 agentId, bool won, int256 pnl) external override {
-        require(msg.sender == predictionMarket, "Only PredictionMarket");
+        if (msg.sender != predictionMarket) revert Errors.NotMarket();
 
         if (!_isTracked[agentId]) {
             _isTracked[agentId] = true;
@@ -47,7 +46,8 @@ contract RankingBoard is IRankingBoard, Ownable {
     }
 
     /// @notice Returns top n agents by PnL (simple O(n) selection sort approach)
-    function top(uint256 n) external view returns (uint256[] memory agentIds, int256[] memory pnls) {
+    /// @dev TODO: Production should move to off-chain sorting for gas efficiency
+    function top(uint256 n) external view override returns (uint256[] memory agentIds, int256[] memory pnls) {
         uint256 total = trackedAgents.length;
         if (n > total) n = total;
 
@@ -84,7 +84,7 @@ contract RankingBoard is IRankingBoard, Ownable {
         return stats[agentId];
     }
 
-    function totalTracked() external view returns (uint256) {
+    function totalTracked() external view override returns (uint256) {
         return trackedAgents.length;
     }
 }

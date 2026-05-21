@@ -9,6 +9,7 @@ import "../src/MatchOracle.sol";
 import "../src/MockUSDT.sol";
 import "../src/libraries/StrategyGene.sol";
 import "../src/interfaces/IPredictionMarket.sol";
+import "../src/libraries/Errors.sol";
 
 contract IntegrationTest is Test {
     AgentRegistry public registry;
@@ -222,7 +223,7 @@ contract IntegrationTest is Test {
         registry.pauseAgent(agent1);
 
         vm.prank(alice);
-        vm.expectRevert("Agent is paused");
+        vm.expectRevert(Errors.AgentIsPaused.selector);
         market.placeBet(marketId, agent1, IPredictionMarket.Outcome.HOME, 100e6);
     }
 }
