@@ -71,7 +71,8 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **On-chain Leaderboard** -- `RankingBoard` contract tracks cumulative PnL for every agent, fully verifiable.
 - **Natural Language Interface** -- Tell your agent "I'm betting on Argentina tonight" and it parses intent, confirms, and executes.
 - **Agent Detail with PnL Charts** -- Decision history from on-chain `BetPlaced` events, SVG-based cumulative PnL curve, and bankroll deposit/withdraw transactions.
-- **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing.
+- **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing. The root layout includes full OpenGraph and Twitter Card meta tags with `@ScoutAgent_XL` handles, `og:image`, `og:url`, and `og:locale` for maximum social reach.
+- **SIWE Authentication** -- All write API endpoints require Sign-In with Ethereum (EIP-4361) verification. The runtime parses SIWE messages, verifies signatures via `viem`, enforces nonce replay protection, and checks message expiry. Owner-only endpoints additionally verify on-chain ownership.
 - **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command. npm-ready with dual ESM/CJS exports.
 - **Dashboard Demo Mode** -- Append `?demo=true` for pre-scripted animations optimized for video recording.
 - **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API with configurable mock fallback.
@@ -388,9 +389,9 @@ scout-agent/
 |   |-- agent-runtime/              # AI agent ReAct loop + REST API
 |   |   |-- src/
 |   |   |   |-- agent/              # LLM client, reasoning loop, signer, strategy
-|   |   |   |-- api/                # Fastify routes + intent parser
+|   |   |   |-- api/                # Fastify routes + intent parser + SIWE auth
 |   |   |   |-- chain/              # viem clients, contract interactions
-|   |   |   |-- data/               # Odds, sports, social data adapters
+|   |   |   |-- data/               # Odds, sports, social, OKX OnchainOS adapters
 |   |   |   |-- jobs/               # Tick (agent loop) and resolve (oracle) jobs
 |   |   |-- prompts/                # System, strategy, and intent prompt templates
 |   |   |-- Dockerfile
@@ -465,18 +466,29 @@ scout-agent/
 
 ## Agent Runtime API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/intent` | Natural language to structured intent |
-| `GET` | `/api/agents/:id` | Agent details (on-chain + decoded gene) |
-| `GET` | `/api/agents/:id/decisions` | Decision history for an agent |
-| `POST` | `/api/agents/:id/run` | Manually trigger one agent tick |
-| `GET` | `/api/agents/:id/pause` | Check pause state |
-| `GET` | `/api/markets` | All markets with pool data |
-| `GET` | `/api/leaderboard` | Ranked agents from RankingBoard |
-| `GET` | `/api/stats` | Global statistics (agents, markets, volume) |
-| `GET` | `/api/fixtures` | Upcoming fixtures from Football-Data API |
+All **write endpoints** (POST) require [SIWE (Sign-In with Ethereum)](https://eips.ethereum.org/EIPS/eip-4361) authentication. The frontend must:
+
+1. Fetch a nonce from `GET /api/auth/nonce`.
+2. Construct an EIP-4361 message and sign it with the connected wallet.
+3. Include `x-siwe-message` and `x-siwe-signature` headers on every POST request.
+
+Owner-only endpoints additionally verify that the SIWE signer matches the on-chain agent owner.
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/health` | -- | Health check |
+| `GET` | `/api/auth/nonce` | -- | Generate a SIWE nonce |
+| `POST` | `/api/intent` | SIWE | Natural language to structured intent |
+| `GET` | `/api/agents/:id` | -- | Agent details (on-chain + decoded gene) |
+| `GET` | `/api/agents/:id/decisions` | -- | Decision history for an agent |
+| `POST` | `/api/agents/:id/run` | SIWE (owner) | Manually trigger one agent tick |
+| `POST` | `/api/agents/:id/pause` | SIWE (owner) | Toggle pause state |
+| `GET` | `/api/markets` | -- | All markets with pool data |
+| `GET` | `/api/markets/:id` | -- | Single market detail |
+| `GET` | `/api/leaderboard` | -- | Ranked agents from RankingBoard |
+| `GET` | `/api/stats` | -- | Global statistics (agents, markets, volume) |
+| `GET` | `/api/fixtures` | -- | Upcoming fixtures from Football-Data API |
+| `GET` | `/api/okx/onchain` | -- | OKX OnchainOS status (OKB price + X Layer gas) |
 
 ---
 
@@ -505,6 +517,38 @@ ScoutAgent is built on **X Layer**, the zkEVM Layer 2 powered by OKX. The projec
 - **X Layer Testnet** -- All contracts are deployed and verified on X Layer Testnet (chainId 195), benefiting from low gas fees and fast finality inherent to the zkEVM architecture.
 - **OKLink Explorer** -- All contract addresses link to the [OKLink block explorer](https://www.oklink.com/xlayer-test) for transparent verification of on-chain activity.
 - **OKX Wallet compatibility** -- The frontend uses RainbowKit with wagmi, supporting OKX Wallet as a first-class connector for seamless user onboarding.
+- **OKX DEX Token Price API** -- The Agent Runtime explicitly calls the OKX DEX aggregator API (`/api/v5/dex/market/token-price`) on startup and via the `GET /api/okx/onchain` endpoint to fetch real-time OKB price on X Layer. This data is cached for 5 minutes and logged on boot.
+- **X Layer Gas Oracle** -- The runtime queries the X Layer RPC for current gas prices, providing the frontend with live gas cost estimates for agent operations.
+
+### OnchainOS API Endpoint
+
+```
+GET /api/okx/onchain
+```
+
+Returns:
+
+```json
+{
+  "available": true,
+  "okbPrice": {
+    "symbol": "OKB",
+    "priceUsd": "48.50",
+    "lastUpdated": "2026-05-21T12:00:00.000Z",
+    "source": "okx-onchain"
+  },
+  "gasInfo": {
+    "chainId": "196",
+    "gasPrice": "1000000000",
+    "gasPriceGwei": "1.0",
+    "lastUpdated": "2026-05-21T12:00:00.000Z",
+    "source": "okx-onchain"
+  },
+  "lastCheck": "2026-05-21T12:00:00.000Z"
+}
+```
+
+Implementation: [`apps/agent-runtime/src/data/okx-onchain.ts`](apps/agent-runtime/src/data/okx-onchain.ts)
 
 ---
 
