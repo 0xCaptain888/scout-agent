@@ -1,0 +1,26 @@
+# Slither Configuration for ScoutAgent Contracts
+# Run: slither contracts/ --config-file contracts/slither.config.json
+
+{
+  "detectors_to_exclude": [
+    "naming-convention",
+    "solc-version",
+    "pragma"
+  ],
+  "exclude_informational": true,
+  "exclude_low": false,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "exclude_optimization": true,
+  "filter_paths": [
+    "lib/",
+    "node_modules/",
+    "test/",
+    "script/"
+  ],
+  "solc_remaps": [
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "forge-std/=lib/forge-std/src/"
+  ],
+  "compile_force_framework": "foundry"
+}

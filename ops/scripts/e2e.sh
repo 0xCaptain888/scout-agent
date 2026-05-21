@@ -203,6 +203,39 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Step 9: Playwright E2E tests (web UI)
+# ---------------------------------------------------------------------------
+log "Running Playwright E2E tests..."
+cd "${ROOT_DIR}"
+
+# Install Playwright browsers if not present
+npx playwright install chromium --with-deps > /dev/null 2>&1 || true
+
+if E2E_BASE_URL="http://localhost:3000" npx playwright test \
+  --config=apps/web/playwright.config.ts \
+  --project=chromium \
+  --reporter=list 2>&1; then
+  ok "Playwright E2E tests passed"
+else
+  fail "Playwright E2E tests failed (non-blocking for hackathon)"
+fi
+
+# ---------------------------------------------------------------------------
+# Step 10: Slither static analysis (if available)
+# ---------------------------------------------------------------------------
+log "Running Slither static analysis..."
+if command -v slither &>/dev/null; then
+  cd "${ROOT_DIR}/contracts"
+  if bash scripts/run-slither.sh > /dev/null 2>&1; then
+    ok "Slither analysis completed (see contracts/slither-report/)"
+  else
+    warn "Slither completed with warnings (see contracts/slither-report/)"
+  fi
+else
+  warn "Slither not installed — skipping (install: pip3 install slither-analyzer)"
+fi
+
+# ---------------------------------------------------------------------------
 # Results
 # ---------------------------------------------------------------------------
 echo ""

@@ -552,6 +552,42 @@ Implementation: [`apps/agent-runtime/src/data/okx-onchain.ts`](apps/agent-runtim
 
 ---
 
+## Data Indexer
+
+The indexer (`apps/indexer/`) subscribes to on-chain events with a 5-block confirmation buffer and writes them to PostgreSQL. It exposes a lightweight HTTP API on port 3002.
+
+### Indexed Events
+
+| Contract | Event | Handler | Description |
+|----------|-------|---------|-------------|
+| AgentRegistry | `AgentMinted` | `agentMinted.ts` | New agent NFT minted |
+| AgentRegistry | `BankrollDeposited` | `bankrollDeposited.ts` | USDT deposited into agent bankroll |
+| AgentRegistry | `BankrollWithdrawn` | `bankrollWithdrawn.ts` | USDT withdrawn from agent bankroll |
+| PredictionMarket | `MarketCreated` | `marketCreated.ts` | New betting market opened |
+| PredictionMarket | `BetPlaced` | `betPlaced.ts` | Agent placed a bet on a market |
+| PredictionMarket | `MarketResolved` | `marketResolved.ts` | Market resolved with winning outcome |
+| PredictionMarket | `RewardClaimed` | `rewardClaimed.ts` | Agent claimed reward after resolution |
+| RankingBoard | `StatsUpdated` | `rankingUpdated.ts` | Agent stats updated (wins, losses, PnL) |
+
+### Database Tables
+
+- `agents` — Minted agents with owner, wallet, gene, bankroll
+- `bets` — Individual bets with tx hash, market, agent, outcome, amount
+- `markets` — Markets with status, stakes per outcome, winning outcome
+- `agent_stats` — Cumulative stats (wins, losses, total PnL)
+- `reward_claims` — Reward claim records per market per agent
+
+### Indexer API
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /healthz` | Health check |
+| `GET /indexer/leaderboard?top=20&period=24h` | Leaderboard ranked by PnL |
+| `GET /indexer/recent-bets?limit=50` | Recent bets for live feed |
+| `GET /indexer/agent/:id/history` | Agent profile, stats, and bet history |
+
+---
+
 ## Testing
 
 ### Contract Tests
@@ -562,13 +598,76 @@ forge test -vvv        # 38 tests across 4 test suites
 forge coverage         # Target: >= 80% coverage
 ```
 
+### Fork Tests (X Layer Testnet)
+
+Verify deployed contracts are accessible and behave correctly on a live testnet fork:
+
+```bash
+cd contracts
+forge test --match-contract ForkTest --fork-url https://testrpc.xlayer.tech -vvv
+```
+
+Fork tests validate:
+- All 5 contracts are deployed and have bytecode
+- Registry metadata (name, symbol)
+- Contract wiring (PredictionMarket → AgentRegistry, MatchOracle linkage)
+- Full mint → deposit → bet flow against live state
+
+### Slither Static Analysis
+
+```bash
+cd contracts
+chmod +x scripts/run-slither.sh
+./scripts/run-slither.sh
+```
+
+Generates reports in `contracts/slither-report/`:
+- `slither-results.json` — machine-readable findings
+- `slither-results.sarif` — GitHub code scanning integration
+- `slither-summary.txt` — human-readable contract summary
+
+**Known non-blocking findings:**
+- Centralized oracle (single-signer): documented hackathon design choice. Production would use Chainlink Functions or UMA Optimistic Oracle.
+- `Ownable` admin functions (`setMarket`, `setOracle`): required for deployment wiring.
+- External calls in loops: bounded by design (max bets per agent per market).
+
+Configuration: [`contracts/slither.config.json`](contracts/slither.config.json)
+
+### Playwright E2E Tests
+
+Full browser-based end-to-end tests covering the user journey:
+
+```bash
+# Install Playwright browsers
+npx playwright install chromium
+
+# Run tests (starts dev server automatically)
+npx playwright test --config=apps/web/playwright.config.ts
+
+# Run with UI mode for debugging
+npx playwright test --config=apps/web/playwright.config.ts --ui
+```
+
+Test coverage:
+- Landing page loads with hero content and CTA
+- Mint page shows strategy configuration (risk, style, bankroll)
+- Markets page displays market list or empty state
+- Dashboard loads with key sections (leaderboard, stats)
+- Dashboard demo mode (`?demo=true`) activates without errors
+- Chat page accepts natural language input
+- Agent detail page loads for agent #0
+- Navigation between pages works
+- Mobile responsive layout (iPhone X viewport)
+
+Configuration: [`apps/web/playwright.config.ts`](apps/web/playwright.config.ts)
+
 ### End-to-End
 
 ```bash
 ./ops/scripts/e2e.sh
 ```
 
-Covers: deploy -> seed data -> mint agent -> place bet -> resolve market -> claim reward -> leaderboard update.
+Covers: deploy → seed data → contract tests → API tests (mint, bet, leaderboard) → MCP build → TypeScript checks → Playwright E2E → Slither analysis.
 
 ---
 

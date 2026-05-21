@@ -171,6 +171,61 @@ export async function upsertStats(stats: {
   );
 }
 
+/** Update agent bankroll (deposit or withdraw) */
+export async function updateAgentBankroll(
+  agentId: bigint,
+  amount: bigint,
+  direction: "deposit" | "withdraw",
+): Promise<void> {
+  const operator = direction === "deposit" ? "+" : "-";
+  await query(
+    `UPDATE agents SET bankroll = bankroll ${operator} $1 WHERE id = $2`,
+    [amount.toString(), agentId.toString()],
+  );
+}
+
+/** Insert a new market record */
+export async function insertMarket(market: {
+  id: bigint;
+  matchId: bigint;
+  startTime: Date;
+  status: number;
+}): Promise<void> {
+  await query(
+    `INSERT INTO markets (id, match_id, start_time, status)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      market.id.toString(),
+      market.matchId.toString(),
+      market.startTime,
+      market.status,
+    ],
+  );
+}
+
+/** Insert a reward claim record */
+export async function insertRewardClaim(claim: {
+  marketId: bigint;
+  agentId: bigint;
+  reward: bigint;
+  claimedAt: Date;
+  txHash: string;
+}): Promise<void> {
+  await query(
+    `INSERT INTO reward_claims (market_id, agent_id, reward, claimed_at, tx_hash)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (market_id, agent_id) DO NOTHING`,
+    [
+      claim.marketId.toString(),
+      claim.agentId.toString(),
+      claim.reward.toString(),
+      claim.claimedAt,
+      claim.txHash,
+    ],
+  );
+}
+
 /** Graceful shutdown */
 export async function closePool(): Promise<void> {
   if (pool) {

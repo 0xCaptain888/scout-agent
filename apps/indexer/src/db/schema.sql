@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS agent_stats (
   last_active TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS reward_claims (
+  id SERIAL PRIMARY KEY,
+  market_id BIGINT NOT NULL,
+  agent_id BIGINT NOT NULL,
+  reward NUMERIC NOT NULL DEFAULT 0,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  tx_hash TEXT NOT NULL,
+  UNIQUE(market_id, agent_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_bets_agent ON bets(agent_id);
 CREATE INDEX IF NOT EXISTS idx_bets_market ON bets(market_id);
 CREATE INDEX IF NOT EXISTS idx_stats_pnl ON agent_stats(total_pnl DESC);
+CREATE INDEX IF NOT EXISTS idx_claims_agent ON reward_claims(agent_id);
+CREATE INDEX IF NOT EXISTS idx_claims_market ON reward_claims(market_id);

@@ -4,8 +4,12 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { initSchema, query, closePool } from "./db/client.js";
 import { handleAgentMinted } from "./handlers/agentMinted.js";
+import { handleBankrollDeposited } from "./handlers/bankrollDeposited.js";
+import { handleBankrollWithdrawn } from "./handlers/bankrollWithdrawn.js";
 import { handleBetPlaced } from "./handlers/betPlaced.js";
+import { handleMarketCreated } from "./handlers/marketCreated.js";
 import { handleMarketResolved } from "./handlers/marketResolved.js";
+import { handleRewardClaimed } from "./handlers/rewardClaimed.js";
 import { handleRankingUpdated } from "./handlers/rankingUpdated.js";
 
 // ---------------------------------------------------------------------------
@@ -53,6 +57,22 @@ const agentNftAbi = [
       { name: "gene", type: "uint256", indexed: false, internalType: "uint256" },
     ],
   },
+  {
+    type: "event",
+    name: "BankrollDeposited",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true, internalType: "uint256" },
+      { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+    ],
+  },
+  {
+    type: "event",
+    name: "BankrollWithdrawn",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true, internalType: "uint256" },
+      { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+    ],
+  },
 ] as const satisfies Abi;
 
 const bettingAbi = [
@@ -72,10 +92,28 @@ const bettingAbi = [
 const marketAbi = [
   {
     type: "event",
+    name: "MarketCreated",
+    inputs: [
+      { name: "marketId", type: "uint256", indexed: true, internalType: "uint256" },
+      { name: "matchId", type: "bytes32", indexed: true, internalType: "bytes32" },
+      { name: "startTime", type: "uint256", indexed: false, internalType: "uint256" },
+    ],
+  },
+  {
+    type: "event",
     name: "MarketResolved",
     inputs: [
       { name: "marketId", type: "uint256", indexed: true, internalType: "uint256" },
       { name: "winningOutcome", type: "uint8", indexed: false, internalType: "uint8" },
+    ],
+  },
+  {
+    type: "event",
+    name: "RewardClaimed",
+    inputs: [
+      { name: "marketId", type: "uint256", indexed: true, internalType: "uint256" },
+      { name: "agentId", type: "uint256", indexed: true, internalType: "uint256" },
+      { name: "reward", type: "uint256", indexed: false, internalType: "uint256" },
     ],
   },
 ] as const satisfies Abi;
@@ -119,6 +157,42 @@ function startWatchers(): void {
   });
 
   client.watchContractEvent({
+    address: AGENT_NFT_ADDRESS,
+    abi: agentNftAbi,
+    eventName: "BankrollDeposited",
+    pollingInterval: 4_000,
+    onLogs: async (logs) => {
+      for (const log of logs) {
+        try {
+          const currentBlock = await client.getBlockNumber();
+          if (log.blockNumber && currentBlock - log.blockNumber < CONFIRMATION_BLOCKS) continue;
+          await handleBankrollDeposited(log as unknown as Log);
+        } catch (err) {
+          console.error("[bankrollDeposited] Error processing log:", err);
+        }
+      }
+    },
+  });
+
+  client.watchContractEvent({
+    address: AGENT_NFT_ADDRESS,
+    abi: agentNftAbi,
+    eventName: "BankrollWithdrawn",
+    pollingInterval: 4_000,
+    onLogs: async (logs) => {
+      for (const log of logs) {
+        try {
+          const currentBlock = await client.getBlockNumber();
+          if (log.blockNumber && currentBlock - log.blockNumber < CONFIRMATION_BLOCKS) continue;
+          await handleBankrollWithdrawn(log as unknown as Log);
+        } catch (err) {
+          console.error("[bankrollWithdrawn] Error processing log:", err);
+        }
+      }
+    },
+  });
+
+  client.watchContractEvent({
     address: BETTING_ADDRESS,
     abi: bettingAbi,
     eventName: "BetPlaced",
@@ -139,6 +213,24 @@ function startWatchers(): void {
   client.watchContractEvent({
     address: MARKET_ADDRESS,
     abi: marketAbi,
+    eventName: "MarketCreated",
+    pollingInterval: 4_000,
+    onLogs: async (logs) => {
+      for (const log of logs) {
+        try {
+          const currentBlock = await client.getBlockNumber();
+          if (log.blockNumber && currentBlock - log.blockNumber < CONFIRMATION_BLOCKS) continue;
+          await handleMarketCreated(log as unknown as Log);
+        } catch (err) {
+          console.error("[marketCreated] Error processing log:", err);
+        }
+      }
+    },
+  });
+
+  client.watchContractEvent({
+    address: MARKET_ADDRESS,
+    abi: marketAbi,
     eventName: "MarketResolved",
     pollingInterval: 4_000,
     onLogs: async (logs) => {
@@ -149,6 +241,24 @@ function startWatchers(): void {
           await handleMarketResolved(log as unknown as Log);
         } catch (err) {
           console.error("[marketResolved] Error processing log:", err);
+        }
+      }
+    },
+  });
+
+  client.watchContractEvent({
+    address: MARKET_ADDRESS,
+    abi: marketAbi,
+    eventName: "RewardClaimed",
+    pollingInterval: 4_000,
+    onLogs: async (logs) => {
+      for (const log of logs) {
+        try {
+          const currentBlock = await client.getBlockNumber();
+          if (log.blockNumber && currentBlock - log.blockNumber < CONFIRMATION_BLOCKS) continue;
+          await handleRewardClaimed(log as unknown as Log);
+        } catch (err) {
+          console.error("[rewardClaimed] Error processing log:", err);
         }
       }
     },
