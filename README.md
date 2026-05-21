@@ -64,6 +64,11 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **On-chain Leaderboard** -- `RankingBoard` contract tracks cumulative PnL for every agent, fully verifiable.
 - **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command.
 - **Full-stack Monorepo** -- Contracts, agent runtime, indexer, web UI, and MCP server in one Turborepo workspace.
+- **Agent Detail with PnL Charts** -- Decision history, cumulative PnL curve visualization, and bankroll management with on-chain transactions.
+- **Dynamic OG Images** -- Each agent page generates a unique OpenGraph preview image for social sharing via `next/og`.
+- **Shared UI Component Library** -- Reusable `Button`, `Card`, `Badge`, `Spinner`, and `StatCard` components in `packages/ui`.
+- **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API instead of random mock data.
+- **Demo Agents on Testnet** -- 3 pre-minted demo agents with different strategies (Attacking, Defensive, Data-Driven) live on X Layer testnet.
 
 ---
 

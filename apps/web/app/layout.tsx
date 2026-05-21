@@ -37,6 +37,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>ScoutAgent - AI Scout Betting on X Layer</title>
         <meta name="description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
         <link rel="icon" href="/favicon.ico" />
+
+        {/* Default OpenGraph meta tags */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="ScoutAgent" />
+        <meta property="og:title" content="ScoutAgent - AI Scout Betting on X Layer" />
+        <meta property="og:description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
+
+        {/* Default Twitter Card meta tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="ScoutAgent - AI Scout Betting on X Layer" />
+        <meta name="twitter:description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
       </head>
       <body className="min-h-screen bg-background text-white">
         <Providers>

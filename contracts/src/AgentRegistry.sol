@@ -121,14 +121,29 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
     function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         _requireOwned(tokenId);
         uint256 gene = _genes[tokenId];
+        return _buildTokenURI(tokenId, gene);
+    }
+
+    function _buildTokenURI(uint256 tokenId, uint256 gene) internal view returns (string memory) {
         (uint256 riskLevel, uint256 style, uint256 bankrollPct,) = StrategyGene.decode(gene);
 
         string memory styleName = style < 5 ? _styleNames[style] : "UNKNOWN";
         string memory styleColor = style < 5 ? _styleColors[style] : "#888888";
 
         string memory svg = _buildSVG(tokenId, riskLevel, styleName, styleColor, bankrollPct);
+        string memory json = _buildJSON(tokenId, riskLevel, styleName, bankrollPct, svg);
 
-        string memory json = string(abi.encodePacked(
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
+    }
+
+    function _buildJSON(
+        uint256 tokenId,
+        uint256 riskLevel,
+        string memory styleName,
+        uint256 bankrollPct,
+        string memory svg
+    ) internal pure returns (string memory) {
+        return string(abi.encodePacked(
             '{"name":"ScoutAgent #', tokenId.toString(),
             '","description":"On-chain sports betting agent",',
             '"image":"data:image/svg+xml;base64,', Base64.encode(bytes(svg)), '",',
@@ -138,8 +153,6 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
                 '{"trait_type":"Bankroll %","value":', bankrollPct.toString(), '}',
             ']}'
         ));
-
-        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
     }
 
     function _buildSVG(
@@ -149,32 +162,50 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         string memory styleColor,
         uint256 bankrollPct
     ) internal pure returns (string memory) {
-        // Build risk bar (riskLevel * 40px width, max 200px)
-        string memory riskBarWidth = (riskLevel * 40).toString();
-        string memory bankrollBarWidth = ((bankrollPct * 200) / 100).toString();
+        string memory part1 = _svgHeader(tokenId, styleColor);
+        string memory part2 = _svgBody(riskLevel, styleName, styleColor, bankrollPct);
+        return string(abi.encodePacked(part1, part2));
+    }
 
+    function _svgHeader(uint256 tokenId, string memory styleColor) internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350" viewBox="0 0 350 350">',
             '<defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">',
             '<stop offset="0%" style="stop-color:#0a0a2e"/><stop offset="100%" style="stop-color:#1a1a4e"/></linearGradient></defs>',
             '<rect width="350" height="350" fill="url(#bg)" rx="20"/>',
             '<text x="175" y="45" font-family="monospace" font-size="22" fill="#fff" text-anchor="middle" font-weight="bold">SCOUT AGENT</text>',
-            '<text x="175" y="75" font-family="monospace" font-size="16" fill="', styleColor, '" text-anchor="middle">#', tokenId.toString(), '</text>',
-            '<rect x="30" y="100" width="290" height="1" fill="#333"/>',
-            // Style badge
+            '<text x="175" y="75" font-family="monospace" font-size="16" fill="', styleColor,
+            '" text-anchor="middle">#', tokenId.toString(), '</text>',
+            '<rect x="30" y="100" width="290" height="1" fill="#333"/>'
+        ));
+    }
+
+    function _svgBody(
+        uint256 riskLevel,
+        string memory styleName,
+        string memory styleColor,
+        uint256 bankrollPct
+    ) internal pure returns (string memory) {
+        string memory riskBarWidth = (riskLevel * 40).toString();
+        string memory bankrollBarWidth = ((bankrollPct * 200) / 100).toString();
+
+        return string(abi.encodePacked(
             '<rect x="95" y="115" width="160" height="30" rx="15" fill="', styleColor, '" opacity="0.2"/>',
             '<text x="175" y="136" font-family="monospace" font-size="14" fill="', styleColor, '" text-anchor="middle">', styleName, '</text>',
-            // Risk level
             '<text x="40" y="185" font-family="monospace" font-size="12" fill="#aaa">RISK LEVEL</text>',
             '<rect x="40" y="195" width="200" height="12" rx="6" fill="#222"/>',
             '<rect x="40" y="195" width="', riskBarWidth, '" height="12" rx="6" fill="#ff6644"/>',
             '<text x="250" y="205" font-family="monospace" font-size="12" fill="#fff">', riskLevel.toString(), '/5</text>',
-            // Bankroll %
+            _svgFooter(bankrollPct, bankrollBarWidth)
+        ));
+    }
+
+    function _svgFooter(uint256 bankrollPct, string memory bankrollBarWidth) internal pure returns (string memory) {
+        return string(abi.encodePacked(
             '<text x="40" y="240" font-family="monospace" font-size="12" fill="#aaa">BANKROLL %</text>',
             '<rect x="40" y="250" width="200" height="12" rx="6" fill="#222"/>',
             '<rect x="40" y="250" width="', bankrollBarWidth, '" height="12" rx="6" fill="#44aaff"/>',
             '<text x="250" y="260" font-family="monospace" font-size="12" fill="#fff">', bankrollPct.toString(), '%</text>',
-            // Footer
             '<rect x="30" y="300" width="290" height="1" fill="#333"/>',
             '<text x="175" y="330" font-family="monospace" font-size="10" fill="#555" text-anchor="middle">ScoutAgent Protocol</text>',
             '</svg>'

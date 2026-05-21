@@ -35,18 +35,18 @@ library StrategyGene {
         uint256 style,
         uint256 bankrollPct,
         uint16[5] memory favoriteTeams
-    ) internal pure returns (uint256 gene) {
+    ) internal pure returns (uint256) {
         if (riskLevel < 1 || riskLevel > 5) revert Errors.InvalidStrategy();
         if (style > 4) revert Errors.InvalidStrategy();
         if (bankrollPct < 1 || bankrollPct > 100) revert Errors.InvalidStrategy();
 
-        gene = (riskLevel << RISK_SHIFT)
-             | (style << STYLE_SHIFT)
-             | (bankrollPct << BANKROLL_SHIFT);
-
-        for (uint256 i = 0; i < NUM_TEAMS; i++) {
-            gene |= uint256(favoriteTeams[i]) << (TEAMS_SHIFT + i * TEAM_BITS);
-        }
+        uint256 gene = riskLevel | (style << 3) | (bankrollPct << 6);
+        gene |= uint256(favoriteTeams[0]) << 13;
+        gene |= uint256(favoriteTeams[1]) << 29;
+        gene |= uint256(favoriteTeams[2]) << 45;
+        gene |= uint256(favoriteTeams[3]) << 61;
+        gene |= uint256(favoriteTeams[4]) << 77;
+        return gene;
     }
 
     /// @notice Decode a packed gene into its component fields
@@ -60,13 +60,14 @@ library StrategyGene {
             uint16[5] memory favoriteTeams
         )
     {
-        riskLevel   = (gene >> RISK_SHIFT) & RISK_MASK;
-        style       = (gene >> STYLE_SHIFT) & STYLE_MASK;
-        bankrollPct = (gene >> BANKROLL_SHIFT) & BANKROLL_MASK;
-
-        for (uint256 i = 0; i < NUM_TEAMS; i++) {
-            favoriteTeams[i] = uint16((gene >> (TEAMS_SHIFT + i * TEAM_BITS)) & TEAM_MASK);
-        }
+        riskLevel   = gene & RISK_MASK;
+        style       = (gene >> 3) & STYLE_MASK;
+        bankrollPct = (gene >> 6) & BANKROLL_MASK;
+        favoriteTeams[0] = uint16((gene >> 13) & TEAM_MASK);
+        favoriteTeams[1] = uint16((gene >> 29) & TEAM_MASK);
+        favoriteTeams[2] = uint16((gene >> 45) & TEAM_MASK);
+        favoriteTeams[3] = uint16((gene >> 61) & TEAM_MASK);
+        favoriteTeams[4] = uint16((gene >> 77) & TEAM_MASK);
     }
 
     /// @notice Validate that a gene encodes valid strategy parameters
