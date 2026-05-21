@@ -127,7 +127,7 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **Network** | X Layer (zkEVM L2 by OKX) | Low-fee EVM-compatible settlement |
-| **Contracts** | Solidity 0.8.24 + Foundry | AgentRegistry, PredictionMarket, MatchOracle, RankingBoard |
+| **Contracts** | Solidity 0.8.24 + Foundry | AgentRegistry, PredictionMarket, MatchOracle, RankingBoard, AgentVault |
 | **Agent Runtime** | TypeScript + Fastify | ReAct reasoning loop with LLM integration |
 | **LLM** | DeepSeek v4 (via OpenAI-compatible SDK) | Strategy reasoning and bet decisions |
 | **Frontend** | Next.js 14 + RainbowKit + wagmi + Tailwind CSS | Wallet connection, minting, dashboard |
@@ -151,6 +151,7 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 | RankingBoard | `0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1) |
 | PredictionMarket | `0x7058132Ba4aE19983c61590644F2943A3B7fDf80` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
 | MatchOracle | `0x494960e21058290BB2F1328b6b837dCF26aA5DCb` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x494960e21058290BB2F1328b6b837dCF26aA5DCb) |
+| AgentVault | *(deployed via `Deploy.s.sol`, address in `deployments/xlayer-testnet.json`)* | Batch settlement helper |
 
 ---
 
@@ -423,10 +424,10 @@ scout-agent/
 |   |   |-- PredictionMarket.sol    # Pool-based betting markets
 |   |   |-- MatchOracle.sol         # Score feed + market resolution
 |   |   |-- RankingBoard.sol        # On-chain leaderboard
-|   |   |-- AgentVault.sol          # Bankroll vault abstraction
+|   |   |-- AgentVault.sol          # Bankroll vault / batch settlement
 |   |   |-- MockUSDT.sol            # Testnet ERC-20 token
 |   |   |-- interfaces/             # IAgentRegistry, IPredictionMarket, IMatchOracle, IRankingBoard
-|   |   |-- libraries/              # StrategyGene (bit-packed encoding), Errors
+|   |   |-- libraries/              # StrategyGene (bit-packed encoding), Errors (18 custom errors)
 |   |-- script/                     # Deploy.s.sol, SeedMatches.s.sol, CreateDemoAgents.s.sol
 |   |-- test/                       # AgentRegistry.t.sol, PredictionMarket.t.sol, etc. (38 tests)
 |   |-- deployments/                # xlayer-testnet.json with deployed addresses
