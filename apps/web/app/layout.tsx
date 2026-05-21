@@ -35,19 +35,36 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <head>
         <title>ScoutAgent - AI Scout Betting on X Layer</title>
-        <meta name="description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
+        <meta name="description" content="Mint your AI Scout Agent NFT on X Layer. Set its strategy gene, let it auto-bet on World Cup matches against other agents, and climb the global leaderboard." />
         <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#0A0A0F" />
 
-        {/* Default OpenGraph meta tags */}
+        {/* OpenGraph meta tags */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="ScoutAgent" />
-        <meta property="og:title" content="ScoutAgent - AI Scout Betting on X Layer" />
-        <meta property="og:description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
+        <meta property="og:title" content="ScoutAgent — Mint AI Scouts That Bet the World Cup on X Layer" />
+        <meta property="og:description" content="Mint your AI Scout Agent NFT, set its strategy gene, and let it auto-bet on World Cup matches against other agents. Built on X Layer for OKX Build X Hackathon." />
+        <meta property="og:url" content="https://scoutagent.xyz" />
+        <meta property="og:image" content="https://scoutagent.xyz/og-default.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="ScoutAgent — AI Scout Betting Platform on X Layer" />
+        <meta property="og:locale" content="en_US" />
 
-        {/* Default Twitter Card meta tags */}
+        {/* Twitter Card meta tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="ScoutAgent - AI Scout Betting on X Layer" />
-        <meta name="twitter:description" content="Mint an AI scout agent, set its strategy, and compete on X Layer" />
+        <meta name="twitter:site" content="@ScoutAgent_XL" />
+        <meta name="twitter:creator" content="@ScoutAgent_XL" />
+        <meta name="twitter:title" content="ScoutAgent — Mint AI Scouts That Bet the World Cup on X Layer" />
+        <meta name="twitter:description" content="Mint your AI Scout Agent NFT, set its strategy gene, and let it auto-bet on World Cup matches against other agents. Built on X Layer for OKX Build X Hackathon." />
+        <meta name="twitter:image" content="https://scoutagent.xyz/og-default.png" />
+        <meta name="twitter:image:alt" content="ScoutAgent — AI Scout Betting Platform on X Layer" />
+
+        {/* Additional SEO tags */}
+        <meta name="keywords" content="AI Agent, World Cup, Prediction Market, X Layer, OKX, NFT, Betting, MCP Server, OnchainOS" />
+        <meta name="author" content="ScoutAgent" />
+        <link rel="canonical" href="https://scoutagent.xyz" />
       </head>
       <body className="min-h-screen bg-background text-white">
         <Providers>

@@ -4,6 +4,7 @@
 
 import type { FastifyInstance } from "fastify";
 import { handleIntent } from "./intent.js";
+import { requireSiwe, generateNonce, getSiweAuth } from "./siwe.js";
 import { runAgentTick, getDecisionLogs } from "../agent/loop.js";
 import { getUpcomingFixtures } from "../data/sports.js";
 import { getMarket, marketCount } from "../chain/market.js";
@@ -17,6 +18,7 @@ import {
 } from "../chain/registry.js";
 import { getLeaderboard, getAgentStats } from "../chain/ranking.js";
 import { decodeGene, STYLE_NAMES } from "../agent/strategy.js";
+import { queryOnchainOS } from "../data/okx-onchain.js";
 import { formatUnits } from "viem";
 
 // ---------------------------------------------------------------------------
@@ -41,8 +43,13 @@ export async function registerRoutes(app: FastifyInstance) {
     timestamp: new Date().toISOString(),
   }));
 
-  // POST /api/intent - Natural language intent extraction
-  app.post("/api/intent", handleIntent);
+  // GET /api/auth/nonce - Generate a fresh nonce for SIWE
+  app.get("/api/auth/nonce", async () => ({
+    nonce: generateNonce(),
+  }));
+
+  // POST /api/intent - Natural language intent extraction (write → requires SIWE)
+  app.post("/api/intent", { preHandler: [requireSiwe] }, handleIntent);
 
   // GET /api/agents/:id - Get agent details
   app.get<{ Params: { id: string } }>("/api/agents/:id", async (req, reply) => {
@@ -87,10 +94,25 @@ export async function registerRoutes(app: FastifyInstance) {
     return { agentId: req.params.id, decisions: logs };
   });
 
-  // POST /api/agents/:id/run - Manually trigger agent tick
-  app.post<{ Params: { id: string } }>("/api/agents/:id/run", async (req, reply) => {
+  // POST /api/agents/:id/run - Manually trigger agent tick (requires SIWE, owner only)
+  app.post<{ Params: { id: string } }>("/api/agents/:id/run", { preHandler: [requireSiwe] }, async (req, reply) => {
     try {
       const tokenId = BigInt(req.params.id);
+
+      // Verify caller is the agent owner
+      const auth = getSiweAuth(req);
+      if (auth) {
+        const owner = await safeRead(
+          () => ownerOf(tokenId),
+          "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        );
+        if (auth.address.toLowerCase() !== owner.toLowerCase()) {
+          return reply.status(403).send({
+            error: "Forbidden",
+            message: "Only the agent owner can trigger a tick",
+          });
+        }
+      }
       const decisions = await runAgentTick(tokenId);
       return {
         agentId: req.params.id,
@@ -105,11 +127,26 @@ export async function registerRoutes(app: FastifyInstance) {
     }
   });
 
-  // POST /api/agents/:id/pause - Toggle agent pause state
-  app.post<{ Params: { id: string } }>("/api/agents/:id/pause", async (req, reply) => {
+  // POST /api/agents/:id/pause - Toggle agent pause state (requires SIWE, owner only)
+  app.post<{ Params: { id: string } }>("/api/agents/:id/pause", { preHandler: [requireSiwe] }, async (req, reply) => {
     try {
       const tokenId = BigInt(req.params.id);
       const currentlyPaused = await safeRead(() => isPaused(tokenId), false);
+
+      // Verify caller is the agent owner
+      const auth = getSiweAuth(req);
+      if (auth) {
+        const owner = await safeRead(
+          () => ownerOf(tokenId),
+          "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        );
+        if (auth.address.toLowerCase() !== owner.toLowerCase()) {
+          return reply.status(403).send({
+            error: "Forbidden",
+            message: "Only the agent owner can toggle pause state",
+          });
+        }
+      }
       // Note: actual pause toggle requires on-chain tx from owner
       // For hackathon, we return the current state
       return {
@@ -249,5 +286,12 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get("/api/fixtures", async () => {
     const fixtures = await getUpcomingFixtures();
     return { fixtures };
+  });
+
+  // GET /api/okx/onchain - OKX OnchainOS status (token price + gas)
+  // Doc ref: Section 11 — explicit OKX API call for "political correctness"
+  app.get("/api/okx/onchain", async () => {
+    const status = await queryOnchainOS();
+    return status;
   });
 }

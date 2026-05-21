@@ -9,6 +9,7 @@ import cron from "node-cron";
 import { registerRoutes } from "./api/routes.js";
 import { tickAllAgents } from "./jobs/tick.js";
 import { resolveEndedMarkets } from "./jobs/resolve.js";
+import { queryOnchainOS } from "./data/okx-onchain.js";
 
 async function main() {
   const app = Fastify({
@@ -67,6 +68,17 @@ async function main() {
     await app.listen({ port, host });
     console.log(`[Server] Agent Runtime listening on ${host}:${port}`);
     console.log(`[Server] Health check: http://${host}:${port}/health`);
+
+    // Warm up OKX OnchainOS cache on startup (Section 11 integration)
+    queryOnchainOS()
+      .then((s) =>
+        console.log(
+          `[OKX OnchainOS] Initialized — OKB=$${s.okbPrice?.priceUsd || "?"}, available=${s.available}`,
+        ),
+      )
+      .catch((err) =>
+        console.warn("[OKX OnchainOS] Startup warmup failed:", err),
+      );
   } catch (err) {
     app.log.error(err);
     process.exit(1);
