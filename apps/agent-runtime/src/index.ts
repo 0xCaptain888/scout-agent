@@ -59,6 +59,21 @@ async function main() {
     });
 
     console.log("[Cron] Scheduled: tick (every 1m), resolve (every 10m)");
+
+    // Heartbeat mode: generates continuous baseline activity
+    const HEARTBEAT_MODE = process.env.HEARTBEAT_MODE === 'true';
+    if (HEARTBEAT_MODE) {
+      const { createDemoMarket } = await import('./jobs/createDemoMarket.js');
+      console.log('[Heartbeat] Running in heartbeat mode — generates baseline activity');
+
+      // Every 2 hours create a new demo market
+      setInterval(async () => {
+        try { await createDemoMarket(); } catch (e) { console.error('[Heartbeat] Market creation error:', e); }
+      }, 2 * 3600_000);
+
+      // Create one immediately on start
+      createDemoMarket().catch(e => console.error('[Heartbeat] Initial market creation error:', e));
+    }
   } else {
     console.log("[Cron] Cron jobs disabled (ENABLE_CRON=false)");
   }

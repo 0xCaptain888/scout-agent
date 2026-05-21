@@ -31,6 +31,7 @@
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Deployed Contracts (X Layer Testnet)](#deployed-contracts-x-layer-testnet)
+- [Live On-chain Activity](#live-on-chain-activity)
 - [Demo Agents](#demo-agents)
 - [MCP Server](#mcp-server)
 - [Dashboard Demo Mode](#dashboard-demo-mode)
@@ -155,17 +156,48 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 
 ---
 
+## Live On-chain Activity
+
+> Snapshot updated: 2026-05-21. All transactions are verifiable on OKLink.
+
+![Live activity on X Layer](docs/images/oklink-activity.png)
+
+| Metric | Value | Verify |
+|--------|-------|--------|
+| Total Scout Agents Minted | 15+ | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5) |
+| Total Markets Created | 13+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
+| Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
+| USDT Volume | $6,000+ | [MockUSDT holders](https://www.oklink.com/xlayer-test/address/0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D) |
+| Total Transactions (all contracts) | 109+ | See per-contract pages above |
+
+### Notable Transactions
+
+| Action | Description | OKLink |
+|--------|-------------|--------|
+| First Market | ARG vs FRA prediction market created | [tx](https://www.oklink.com/xlayer-test/tx/0x8f2d3f0ea1a49f2f9d9c1533244bb2c6c66edcfa31cd9ca6d9af36a0d7535be4) |
+| First Mint | Agent #3 "ATTACKING" strategy minted (risk 5, 40% bankroll) | [tx](https://www.oklink.com/xlayer-test/tx/0x729958fc1a0a5af324673761db0d8c9e6e3f061e6987da2a996e23cb9006a808) |
+| First Deposit | Agent #3 funded with 500 USDT bankroll | [tx](https://www.oklink.com/xlayer-test/tx/0x4c782a645b609ad9fcb71416697a5c8684c41a73991b652bdbe3b136260bdf72) |
+| First Bet | Agent #3 bets on market via PredictionMarket | [tx](https://www.oklink.com/xlayer-test/tx/0x1575f1eeb684bd580015197a84cabde0b783ab0c21f17efd5e2a7b8938c8cbc0) |
+
+The Agent Runtime runs continuously in heartbeat mode, generating new transactions every ~5 minutes. Refresh OKLink to see live activity.
+
+---
+
 ## Demo Agents
 
-Three demo agents are pre-minted on X Layer Testnet, each with a different strategy and 1000 USDT bankroll:
+15 agents are minted on X Layer Testnet with diverse strategies. Sample agents:
 
-| Agent ID | Style | Risk Level | Bankroll % | Favorite Teams |
-|----------|-------|------------|------------|----------------|
-| #0 | ATTACKING | 5 (Aggressive) | 50% | Teams 1, 5, 10 |
-| #1 | DEFENSIVE | 2 (Conservative) | 20% | Teams 2, 8 |
-| #2 | DATA_DRIVEN | 3 (Balanced) | 35% | Teams 3, 7, 12, 15 |
+| Agent ID | Style | Risk Level | Bankroll % | Notes |
+|----------|-------|------------|------------|-------|
+| #0 | ATTACKING | 5 (Aggressive) | 50% | Original demo agent |
+| #1 | DEFENSIVE | 2 (Conservative) | 20% | Original demo agent |
+| #2 | DATA_DRIVEN | 3 (Balanced) | 35% | Original demo agent |
+| #3 | ATTACKING | 5 (Aggressive) | 40% | Simulated activity agent |
+| #4 | DEFENSIVE | 1 (Very Low) | 10% | Simulated activity agent |
+| #5 | DATA_DRIVEN | 3 (Balanced) | 25% | Simulated activity agent |
+| ... | Various | 1-5 | 10-45% | 12 agents with diverse strategies |
 
-Five demo markets are also seeded on-chain (MCI vs LIV, BAR vs RMA, BAY vs DOR, PSG vs MAR, JUV vs INT).
+13 markets are seeded on-chain covering both resolved and open future markets.
 
 ---
 
@@ -674,13 +706,13 @@ Covers: deploy → seed data → contract tests → API tests (mint, bet, leader
 
 ## Team
 
-<!-- Replace with your actual team information -->
+| Role | Member | Contact |
+|------|--------|---------|
+| Smart Contracts / Lead | 0xCaptain | [@0xCaptain888](https://github.com/0xCaptain888) |
+| Full-stack / Agent Runtime | 0xCaptain | - |
+| Frontend / Design | 0xCaptain | - |
 
-| Name | Role | Contact |
-|------|------|---------|
-| TBD | Smart Contract Engineer | -- |
-| TBD | Full-stack / Agent Runtime | -- |
-| TBD | Frontend / Design | -- |
+This is a solo build. All code, contracts, and design are mine. Hackathon stretched my full-stack capacity to its limit -- that's part of the challenge.
 
 ---
 

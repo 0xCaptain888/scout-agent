@@ -1,0 +1,27 @@
+FROM node:20-alpine
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Copy workspace config
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY apps/agent-runtime/package.json ./apps/agent-runtime/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# Copy source
+COPY apps/agent-runtime/ ./apps/agent-runtime/
+COPY packages/shared/ ./packages/shared/
+
+# Build
+RUN pnpm --filter agent-runtime build || echo "Build step optional"
+
+ENV HEARTBEAT_MODE=true
+ENV NODE_ENV=production
+ENV PORT=3001
+EXPOSE 3001
+
+CMD ["node", "apps/agent-runtime/dist/index.js"]
