@@ -9,15 +9,17 @@
 <h1 align="center">ScoutAgent</h1>
 
 <p align="center">
-  <strong>Autonomous AI agents that bet the FIFA World Cup 2026 for you -- on-chain, on X Layer.</strong>
+  <strong>Mint AI Scout NFTs that bet on the World Cup for you, on X Layer.</strong><br/>
+  Built for OKX Build X Hackathon &middot; XCup 2026.
 </p>
 
 <p align="center">
-  <a href="https://scoutagent.xyz">scoutagent.xyz</a> |
-  <a href="https://x.com/ScoutAgent_XL">@ScoutAgent_XL</a> |
-  <a href="docs/PITCH.md">Pitch Deck</a> |
-  <a href="docs/ARCHITECTURE.md">Architecture</a> |
-  <a href="docs/MCP_GUIDE.md">MCP Guide</a>
+  <a href="https://scoutagent.xyz">Live Demo</a> &middot;
+  <a href="https://x.com/ScoutAgent_XL">@ScoutAgent_XL</a> &middot;
+  <a href="docs/PITCH.md">Pitch Deck</a> &middot;
+  <a href="docs/ARCHITECTURE.md">Architecture</a> &middot;
+  <a href="docs/MCP_GUIDE.md">MCP Guide</a> &middot;
+  <a href="docs/DEMO_SCRIPT.md">Demo Script</a>
 </p>
 
 ---
@@ -29,11 +31,16 @@
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Deployed Contracts (X Layer Testnet)](#deployed-contracts-x-layer-testnet)
+- [Demo Agents](#demo-agents)
 - [MCP Server](#mcp-server)
+- [Dashboard Demo Mode](#dashboard-demo-mode)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
+- [Frontend Pages](#frontend-pages)
+- [Agent Runtime API](#agent-runtime-api)
 - [Oracle Design](#oracle-design)
 - [OKX OnchainOS Integration](#okx-onchainos-integration)
+- [Testing](#testing)
 - [Team](#team)
 - [License](#license)
 
@@ -62,15 +69,14 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **Autonomous Betting Loop** -- ReAct-style reasoning loop fetches odds, stats, and sentiment, then decides BET or SKIP per fixture.
 - **Prediction Markets** -- Pool-based markets per match with proportional payouts and a 2% protocol fee.
 - **On-chain Leaderboard** -- `RankingBoard` contract tracks cumulative PnL for every agent, fully verifiable.
-- **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command.
-- **Full-stack Monorepo** -- Contracts, agent runtime, indexer, web UI, and MCP server in one Turborepo workspace.
-- **Agent Detail with PnL Charts** -- Decision history, cumulative PnL curve visualization, and bankroll management with on-chain transactions.
-- **Dynamic OG Images** -- Each agent page generates a unique OpenGraph preview image for social sharing via `next/og`.
+- **Natural Language Interface** -- Tell your agent "I'm betting on Argentina tonight" and it parses intent, confirms, and executes.
+- **Agent Detail with PnL Charts** -- Decision history from on-chain `BetPlaced` events, SVG-based cumulative PnL curve, and bankroll deposit/withdraw transactions.
+- **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing.
+- **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command. npm-ready with dual ESM/CJS exports.
+- **Dashboard Demo Mode** -- Append `?demo=true` for pre-scripted animations optimized for video recording.
+- **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API with configurable mock fallback.
 - **Shared UI Component Library** -- Reusable `Button`, `Card`, `Badge`, `Spinner`, and `StatCard` components in `packages/ui`.
-- **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API instead of random mock data.
-- **Demo Agents on Testnet** -- 3 pre-minted demo agents with different strategies (Attacking, Defensive, Data-Driven) live on X Layer testnet.
-- **Dashboard Demo Mode** -- Append `?demo=true` to the dashboard URL for pre-scripted animations optimized for video recording, including particle surges, live stats increments, and odds fluctuations.
-- **npm-ready MCP Server** -- `@scoutagent/mcp-server` package is fully configured for npm publishing with dual ESM/CJS exports.
+- **Full-stack Monorepo** -- Contracts, agent runtime, indexer, web UI, and MCP server in one Turborepo workspace.
 
 ---
 
@@ -121,12 +127,13 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 |-------|------------|---------|
 | **Network** | X Layer (zkEVM L2 by OKX) | Low-fee EVM-compatible settlement |
 | **Contracts** | Solidity 0.8.24 + Foundry | AgentRegistry, PredictionMarket, MatchOracle, RankingBoard |
-| **Agent Runtime** | TypeScript + Fastify + BullMQ | ReAct reasoning loop with LLM integration |
-| **LLM** | DeepSeek v4 (via OpenAI SDK) | Strategy reasoning and bet decisions |
+| **Agent Runtime** | TypeScript + Fastify | ReAct reasoning loop with LLM integration |
+| **LLM** | DeepSeek v4 (via OpenAI-compatible SDK) | Strategy reasoning and bet decisions |
 | **Frontend** | Next.js 14 + RainbowKit + wagmi + Tailwind CSS | Wallet connection, minting, dashboard |
 | **MCP Server** | @modelcontextprotocol/sdk | Claude Desktop / Cursor integration |
 | **Indexer** | TypeScript + viem + PostgreSQL | On-chain event indexing and query layer |
 | **Data Sources** | Football-Data API, The Odds API | Live fixtures, odds, head-to-head records |
+| **Shared UI** | React component library (`packages/ui`) | Button, Card, Badge, Spinner, StatCard |
 | **Infrastructure** | PostgreSQL, Redis, Docker Compose | Persistence, job queues, orchestration |
 
 ---
@@ -146,6 +153,20 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 
 ---
 
+## Demo Agents
+
+Three demo agents are pre-minted on X Layer Testnet, each with a different strategy and 1000 USDT bankroll:
+
+| Agent ID | Style | Risk Level | Bankroll % | Favorite Teams |
+|----------|-------|------------|------------|----------------|
+| #0 | ATTACKING | 5 (Aggressive) | 50% | Teams 1, 5, 10 |
+| #1 | DEFENSIVE | 2 (Conservative) | 20% | Teams 2, 8 |
+| #2 | DATA_DRIVEN | 3 (Balanced) | 35% | Teams 3, 7, 12, 15 |
+
+Five demo markets are also seeded on-chain (MCI vs LIV, BAR vs RMA, BAY vs DOR, PSG vs MAR, JUV vs INT).
+
+---
+
 ## MCP Server
 
 Query ScoutAgent directly from **Claude Desktop** or **Cursor** with one command:
@@ -156,16 +177,16 @@ npx @scoutagent/mcp-server
 
 ### Claude Desktop Configuration
 
-Add the following to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
 ```json
 {
   "mcpServers": {
-    "scoutagent": {
+    "scoutagent-xlayer": {
       "command": "npx",
-      "args": ["@scoutagent/mcp-server"],
+      "args": ["-y", "@scoutagent/mcp-server"],
       "env": {
-        "XLAYER_RPC_URL": "https://testrpc.xlayer.tech"
+        "SCOUT_AGENT_API": "http://localhost:3001"
       }
     }
   }
@@ -174,16 +195,16 @@ Add the following to your Claude Desktop config (`~/Library/Application Support/
 
 ### Cursor Configuration
 
-Add to `.cursor/mcp.json` in your project root:
+Add to `.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "scoutagent": {
+    "scoutagent-xlayer": {
       "command": "npx",
-      "args": ["@scoutagent/mcp-server"],
+      "args": ["-y", "@scoutagent/mcp-server"],
       "env": {
-        "XLAYER_RPC_URL": "https://testrpc.xlayer.tech"
+        "SCOUT_AGENT_API": "http://localhost:3001"
       }
     }
   }
@@ -192,13 +213,58 @@ Add to `.cursor/mcp.json` in your project root:
 
 ### Available MCP Tools
 
-Once connected, you can ask your AI client natural-language questions such as:
+| Tool | Description |
+|------|-------------|
+| `xlayer_list_markets` | List all prediction markets, optionally filter by status or date range |
+| `xlayer_get_market` | Get detailed info about a single market |
+| `xlayer_mint_agent` | Mint a new AI Scout Agent NFT with strategy parameters |
+| `xlayer_place_bet` | Place a bet on a market using an agent |
+| `xlayer_get_agent_stats` | Query an agent's win/loss record and PnL |
+| `xlayer_leaderboard` | Get the top agents ranked by PnL |
+| `xlayer_natural_intent` | Parse natural language into a bet intent |
 
-- "Show me the top 10 agents on the leaderboard"
-- "What bets has agent #42 placed?"
-- "What are the upcoming World Cup matches with open markets?"
+### Available MCP Resources
 
-See the full [MCP Guide](docs/MCP_GUIDE.md) for all available tools and resources.
+| Resource URI | Description |
+|-------------|-------------|
+| `xlayer://match/{matchId}` | Match data including teams, date, and statistics |
+| `xlayer://agent/{agentId}/strategy` | Agent strategy gene as machine-readable JSON |
+| `xlayer://leaderboard/current` | Current leaderboard snapshot |
+
+### Publishing to npm
+
+The package is fully configured for npm publishing. When ready:
+
+```bash
+cd apps/mcp-server
+npm login
+npm publish --access public
+```
+
+Fallback package name if `@scoutagent/mcp-server` has scope issues: `scoutagent-mcp`.
+
+See the full [MCP Guide](docs/MCP_GUIDE.md) for detailed usage.
+
+---
+
+## Dashboard Demo Mode
+
+For recording demo videos, the dashboard supports a special demo mode with pre-scripted animations:
+
+```
+https://your-domain/dashboard?demo=true
+```
+
+**Demo mode features:**
+
+- **Enhanced stats** -- All 4 metrics displayed with live increments (Agents: 142+, Markets: 12, Active Bets: 1847+, Volume: $24,500+)
+- **120 particles** -- Double the normal particle count with faster movement
+- **Surge events** -- Every 15 seconds, 30% of particles rush to one outcome, simulating a betting wave
+- **Auto-highlight** -- Every 20 seconds, one particle scales to 3x size with a pulse animation
+- **5-match ticker** -- Expanded from 3, with odds that fluctuate every 5 seconds
+- **DEMO badge** -- Subtle red indicator in the stats bar so the operator knows demo mode is active
+
+Without `?demo=true`, the dashboard operates normally with live on-chain data.
 
 ---
 
@@ -214,7 +280,7 @@ See the full [MCP Guide](docs/MCP_GUIDE.md) for all available tools and resource
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/scoutagent/scout-agent.git
+git clone https://github.com/0xCaptain888/scout-agent.git
 cd scout-agent
 pnpm install
 ```
@@ -230,10 +296,12 @@ Fill in your API keys:
 | Variable | Description |
 |----------|-------------|
 | `OPERATOR_PRIVATE_KEY` | Deployer / operator wallet private key |
-| `XLAYER_RPC_URL` | X Layer testnet RPC (`https://testrpc.xlayer.tech`) |
+| `XLAYER_TESTNET_RPC` | X Layer testnet RPC (`https://testrpc.xlayer.tech`) |
 | `DEEPSEEK_API_KEY` | DeepSeek LLM API key |
 | `ODDS_API_KEY` | The Odds API key for live odds |
 | `FOOTBALL_DATA_API_KEY` | Football-Data.org API key |
+| `AGENT_MASTER_SECRET` | Seed for deriving agent wallet private keys |
+| `MOCK_RESOLUTION` | Set to `true` to use mock scores for market resolution |
 
 ### 3. Start infrastructure
 
@@ -261,7 +329,27 @@ forge script script/Deploy.s.sol:Deploy \
 cd ..
 ```
 
-### 6. Start all services
+### 6. Seed demo data
+
+```bash
+cd contracts
+
+# Create demo markets
+forge script script/SeedMatches.s.sol:SeedMatches \
+  --rpc-url https://testrpc.xlayer.tech \
+  --private-key $OPERATOR_PRIVATE_KEY \
+  --broadcast -vvv
+
+# Create demo agents
+forge script script/CreateDemoAgents.s.sol:CreateDemoAgents \
+  --rpc-url https://testrpc.xlayer.tech \
+  --private-key $OPERATOR_PRIVATE_KEY \
+  --broadcast -vvv
+
+cd ..
+```
+
+### 7. Start all services
 
 ```bash
 pnpm dev:all
@@ -283,7 +371,7 @@ pnpm --filter @scout-agent/web dev
 pnpm --filter @scoutagent/mcp-server dev
 ```
 
-### 7. Run end-to-end tests
+### 8. Run end-to-end tests
 
 ```bash
 chmod +x ops/scripts/e2e.sh
@@ -297,66 +385,106 @@ chmod +x ops/scripts/e2e.sh
 ```
 scout-agent/
 |-- apps/
-|   |-- agent-runtime/          # AI agent ReAct loop + REST API
+|   |-- agent-runtime/              # AI agent ReAct loop + REST API
 |   |   |-- src/
-|   |   |   |-- agent/          # LLM client, reasoning loop, signer, strategy
-|   |   |   |-- api/            # Fastify routes
-|   |   |   |-- chain/          # viem clients, contract interactions
-|   |   |   |-- data/           # Odds, sports, social data adapters
-|   |   |   |-- jobs/           # BullMQ tick and resolve jobs
-|   |   |-- prompts/            # System and strategy prompt templates
-|   |-- indexer/                # On-chain event indexer
+|   |   |   |-- agent/              # LLM client, reasoning loop, signer, strategy
+|   |   |   |-- api/                # Fastify routes + intent parser
+|   |   |   |-- chain/              # viem clients, contract interactions
+|   |   |   |-- data/               # Odds, sports, social data adapters
+|   |   |   |-- jobs/               # Tick (agent loop) and resolve (oracle) jobs
+|   |   |-- prompts/                # System, strategy, and intent prompt templates
+|   |   |-- Dockerfile
+|   |-- indexer/                    # On-chain event indexer
 |   |   |-- src/
-|   |   |   |-- db/             # PostgreSQL client + schema
-|   |   |   |-- handlers/       # Event handlers (mint, bet, resolve, rank)
-|   |-- mcp-server/             # MCP Server for Claude / Cursor
+|   |   |   |-- db/                 # PostgreSQL client + schema
+|   |   |   |-- handlers/           # Event handlers (mint, bet, resolve, rank)
+|   |-- mcp-server/                 # MCP Server for Claude / Cursor (npm-ready)
 |   |   |-- src/
-|   |   |   |-- tools/          # MCP tool implementations
-|   |   |   |-- resources/      # MCP resource providers
-|   |-- web/                    # Next.js 14 frontend
-|       |-- src/
-|           |-- app/            # App router pages
-|           |-- components/     # React components
-|           |-- hooks/          # wagmi hooks
-|           |-- lib/            # Utilities
-|-- contracts/                  # Foundry project
+|   |   |   |-- tools/              # 7 MCP tool implementations
+|   |   |   |-- resources/          # 2 MCP resource providers
+|   |   |-- .npmignore
+|   |-- web/                        # Next.js 14 frontend
+|       |-- app/
+|       |   |-- page.tsx            # Landing page
+|       |   |-- mint/page.tsx       # Mint Agent NFT
+|       |   |-- chat/page.tsx       # Natural language interface
+|       |   |-- markets/page.tsx    # All markets
+|       |   |-- markets/[id]/       # Single market detail + betting
+|       |   |-- agents/[id]/        # Agent detail + PnL chart + decision history
+|       |   |   |-- opengraph-image.tsx  # Dynamic OG image generation
+|       |   |   |-- layout.tsx      # Per-agent SEO metadata
+|       |   |-- dashboard/page.tsx  # Live dashboard (?demo=true supported)
+|       |-- components/             # AgentCard, MarketCard, Leaderboard, etc.
+|       |-- lib/                    # wagmi config, contract ABIs, API client
+|-- contracts/                      # Foundry project
 |   |-- src/
-|   |   |-- AgentRegistry.sol   # ERC-721 agent NFTs with on-chain SVG
-|   |   |-- PredictionMarket.sol # Pool-based betting markets
-|   |   |-- MatchOracle.sol     # Score feed + market resolution
-|   |   |-- RankingBoard.sol    # On-chain leaderboard
-|   |   |-- MockUSDT.sol        # Testnet ERC-20 token
-|   |   |-- interfaces/         # Contract interfaces
-|   |   |-- libraries/          # StrategyGene, Errors
-|   |-- script/                 # Forge deployment scripts
-|   |-- test/                   # Forge tests
+|   |   |-- AgentRegistry.sol       # ERC-721 agent NFTs with on-chain SVG
+|   |   |-- PredictionMarket.sol    # Pool-based betting markets
+|   |   |-- MatchOracle.sol         # Score feed + market resolution
+|   |   |-- RankingBoard.sol        # On-chain leaderboard
+|   |   |-- AgentVault.sol          # Bankroll vault abstraction
+|   |   |-- MockUSDT.sol            # Testnet ERC-20 token
+|   |   |-- interfaces/             # IAgentRegistry, IPredictionMarket, IMatchOracle, IRankingBoard
+|   |   |-- libraries/              # StrategyGene (bit-packed encoding), Errors
+|   |-- script/                     # Deploy.s.sol, SeedMatches.s.sol, CreateDemoAgents.s.sol
+|   |-- test/                       # AgentRegistry.t.sol, PredictionMarket.t.sol, etc. (38 tests)
+|   |-- deployments/                # xlayer-testnet.json with deployed addresses
 |-- packages/
-|   |-- shared/                 # Shared types and constants
-|   |-- ui/                     # Shared UI components
+|   |-- shared/                     # Shared TypeScript types and constants
+|   |-- ui/                         # Shared UI components (Button, Card, Badge, Spinner, StatCard)
 |-- ops/
-|   |-- docker-compose.yml      # PostgreSQL, Redis, services
-|   |-- scripts/
-|   |   |-- deploy.sh           # Full deployment helper
-|   |   |-- e2e.sh              # End-to-end test script
-|   |-- seed/
-|       |-- matches.json        # Demo World Cup fixtures
-|       |-- demo_agents.json    # Demo agent configurations
+|   |-- docker-compose.yml          # PostgreSQL, Redis, all services
+|   |-- scripts/                    # deploy.sh, e2e.sh
+|   |-- seed/                       # matches.json, demo_agents.json
 |-- docs/
-|   |-- PITCH.md                # One-page hackathon pitch
-|   |-- ARCHITECTURE.md         # Detailed system architecture
-|   |-- DEMO_SCRIPT.md          # 90-second demo video script
-|   |-- MCP_GUIDE.md            # MCP installation and usage guide
+|   |-- PITCH.md                    # One-page hackathon pitch
+|   |-- ARCHITECTURE.md             # Detailed system architecture
+|   |-- DEMO_SCRIPT.md              # 90-second demo video script
+|   |-- MCP_GUIDE.md                # MCP installation and usage guide
+|-- .github/workflows/ci.yml        # CI: contracts build/test + lint + typecheck + build
 |-- .env.example
-|-- package.json
 |-- pnpm-workspace.yaml
 |-- turbo.json
 ```
 
 ---
 
+## Frontend Pages
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/` | Landing page | Hero, features, process steps |
+| `/mint` | Mint Agent | Strategy selection (risk, style, bankroll %) + wallet signing |
+| `/chat` | Natural Language | Input "I'm betting on Argentina" + intent confirmation modal |
+| `/markets` | All Markets | Filter by status, pool distribution, odds display |
+| `/markets/[id]` | Market Detail | Betting UI, outcome selection, live tx feed |
+| `/agents/[id]` | Agent Detail | PnL chart, decision history, bankroll deposit/withdraw |
+| `/dashboard` | Live Dashboard | Particle swarm, leaderboard, live feed (`?demo=true` for recording) |
+
+---
+
+## Agent Runtime API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/api/intent` | Natural language to structured intent |
+| `GET` | `/api/agents/:id` | Agent details (on-chain + decoded gene) |
+| `GET` | `/api/agents/:id/decisions` | Decision history for an agent |
+| `POST` | `/api/agents/:id/run` | Manually trigger one agent tick |
+| `GET` | `/api/agents/:id/pause` | Check pause state |
+| `GET` | `/api/markets` | All markets with pool data |
+| `GET` | `/api/leaderboard` | Ranked agents from RankingBoard |
+| `GET` | `/api/stats` | Global statistics (agents, markets, volume) |
+| `GET` | `/api/fixtures` | Upcoming fixtures from Football-Data API |
+
+---
+
 ## Oracle Design
 
 The `MatchOracle` contract is responsible for posting final match scores and triggering market resolution. In this hackathon build, the oracle uses a **single-signer model**: a designated operator wallet submits results after each match concludes.
+
+The resolve job (`apps/agent-runtime/src/jobs/resolve.ts`) fetches real scores from the Football-Data API. When real scores are unavailable, mock resolution can be enabled via the `MOCK_RESOLUTION=true` environment variable.
 
 **Production considerations:**
 
@@ -377,6 +505,26 @@ ScoutAgent is built on **X Layer**, the zkEVM Layer 2 powered by OKX. The projec
 - **X Layer Testnet** -- All contracts are deployed and verified on X Layer Testnet (chainId 195), benefiting from low gas fees and fast finality inherent to the zkEVM architecture.
 - **OKLink Explorer** -- All contract addresses link to the [OKLink block explorer](https://www.oklink.com/xlayer-test) for transparent verification of on-chain activity.
 - **OKX Wallet compatibility** -- The frontend uses RainbowKit with wagmi, supporting OKX Wallet as a first-class connector for seamless user onboarding.
+
+---
+
+## Testing
+
+### Contract Tests
+
+```bash
+cd contracts
+forge test -vvv        # 38 tests across 4 test suites
+forge coverage         # Target: >= 80% coverage
+```
+
+### End-to-End
+
+```bash
+./ops/scripts/e2e.sh
+```
+
+Covers: deploy -> seed data -> mint agent -> place bet -> resolve market -> claim reward -> leaderboard update.
 
 ---
 
