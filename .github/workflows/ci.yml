@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FOUNDRY_PROFILE: ci
+  NODE_VERSION: "20"
+
+jobs:
+  contracts:
+    name: Smart Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run forge build
+        run: forge build --sizes
+
+      - name: Run forge tests
+        run: forge test -vvv
+
+      - name: Run forge fmt check
+        run: forge fmt --check
+
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript check - agent-runtime
+        run: pnpm --filter @scout-agent/agent-runtime typecheck
+
+      - name: TypeScript check - mcp-server
+        run: pnpm --filter @scoutagent/mcp-server lint
+
+      - name: TypeScript check - indexer
+        run: pnpm --filter @scout-agent/indexer lint
+
+      - name: TypeScript check - web
+        run: pnpm --filter @scout-agent/web lint
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web
+        run: pnpm --filter @scout-agent/web build
+
+      - name: Build agent-runtime
+        run: pnpm --filter @scout-agent/agent-runtime build
+
+      - name: Build mcp-server
+        run: pnpm --filter @scoutagent/mcp-server build
+
+      - name: Build indexer
+        run: pnpm --filter @scout-agent/indexer build

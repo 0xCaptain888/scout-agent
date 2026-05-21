@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: scoutagent-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: scout
+      POSTGRES_PASSWORD: scout
+      POSTGRES_DB: scoutagent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scout -d scoutagent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: scoutagent-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  agent-runtime:
+    build:
+      context: ../
+      dockerfile: apps/agent-runtime/Dockerfile
+    container_name: scoutagent-runtime
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://scout:scout@postgres:5432/scoutagent
+      REDIS_URL: redis://redis:6379
+      PORT: "3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  indexer:
+    build:
+      context: ../
+      dockerfile: apps/indexer/Dockerfile
+    container_name: scoutagent-indexer
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://scout:scout@postgres:5432/scoutagent
+      PORT: "3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../
+      dockerfile: apps/web/Dockerfile
+    container_name: scoutagent-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    environment:
+      NEXT_PUBLIC_AGENT_RUNTIME_URL: http://agent-runtime:3001
+
+volumes:
+  pgdata:
+  redisdata:

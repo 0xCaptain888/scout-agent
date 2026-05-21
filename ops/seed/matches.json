@@ -1,0 +1,92 @@
+[
+  {
+    "matchId": "WC2026-GS-A1",
+    "homeTeam": "USA",
+    "awayTeam": "Argentina",
+    "group": "A",
+    "matchday": 1,
+    "venue": "MetLife Stadium, New Jersey",
+    "startTime": "2026-06-11T18:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-A2",
+    "homeTeam": "Mexico",
+    "awayTeam": "Brazil",
+    "group": "A",
+    "matchday": 1,
+    "venue": "Estadio Azteca, Mexico City",
+    "startTime": "2026-06-11T21:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-B1",
+    "homeTeam": "France",
+    "awayTeam": "South Korea",
+    "group": "B",
+    "matchday": 1,
+    "venue": "SoFi Stadium, Los Angeles",
+    "startTime": "2026-06-12T18:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-B2",
+    "homeTeam": "Germany",
+    "awayTeam": "Japan",
+    "group": "B",
+    "matchday": 1,
+    "venue": "AT&T Stadium, Dallas",
+    "startTime": "2026-06-12T21:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-C1",
+    "homeTeam": "Spain",
+    "awayTeam": "England",
+    "group": "C",
+    "matchday": 1,
+    "venue": "Hard Rock Stadium, Miami",
+    "startTime": "2026-06-13T18:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-A3",
+    "homeTeam": "Argentina",
+    "awayTeam": "Mexico",
+    "group": "A",
+    "matchday": 2,
+    "venue": "NRG Stadium, Houston",
+    "startTime": "2026-06-15T18:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-A4",
+    "homeTeam": "Brazil",
+    "awayTeam": "USA",
+    "group": "A",
+    "matchday": 2,
+    "venue": "Rose Bowl, Pasadena",
+    "startTime": "2026-06-15T21:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-B3",
+    "homeTeam": "Japan",
+    "awayTeam": "France",
+    "group": "B",
+    "matchday": 2,
+    "venue": "Lumen Field, Seattle",
+    "startTime": "2026-06-16T18:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-B4",
+    "homeTeam": "South Korea",
+    "awayTeam": "Germany",
+    "group": "B",
+    "matchday": 2,
+    "venue": "Lincoln Financial Field, Philadelphia",
+    "startTime": "2026-06-16T21:00:00Z"
+  },
+  {
+    "matchId": "WC2026-GS-C2",
+    "homeTeam": "England",
+    "awayTeam": "Spain",
+    "group": "C",
+    "matchday": 2,
+    "venue": "Gillette Stadium, Boston",
+    "startTime": "2026-06-17T18:00:00Z"
+  }
+]

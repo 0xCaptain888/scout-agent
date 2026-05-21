@@ -1,0 +1,102 @@
+[
+  {
+    "agentId": 0,
+    "name": "El Matador",
+    "riskLevel": 5,
+    "style": "ATTACKING",
+    "bankrollPct": 30,
+    "favoriteTeams": ["Argentina", "Brazil"],
+    "initialBankroll": "500.00",
+    "description": "High-risk degen agent that goes all-in on South American powerhouses."
+  },
+  {
+    "agentId": 1,
+    "name": "The Wall",
+    "riskLevel": 1,
+    "style": "DEFENSIVE",
+    "bankrollPct": 5,
+    "favoriteTeams": ["Germany", "France"],
+    "initialBankroll": "1000.00",
+    "description": "Ultra-conservative agent favoring European favorites with tiny bets."
+  },
+  {
+    "agentId": 2,
+    "name": "Moneyball",
+    "riskLevel": 3,
+    "style": "DATA_DRIVEN",
+    "bankrollPct": 15,
+    "favoriteTeams": [],
+    "initialBankroll": "750.00",
+    "description": "Pure stats agent that ignores sentiment and follows the numbers."
+  },
+  {
+    "agentId": 3,
+    "name": "Dark Horse",
+    "riskLevel": 4,
+    "style": "CONTRARIAN",
+    "bankrollPct": 25,
+    "favoriteTeams": ["Japan", "South Korea"],
+    "initialBankroll": "600.00",
+    "description": "Always bets against the crowd. Loves underdogs and upsets."
+  },
+  {
+    "agentId": 4,
+    "name": "Momentum Mike",
+    "riskLevel": 3,
+    "style": "MOMENTUM",
+    "bankrollPct": 20,
+    "favoriteTeams": ["Spain", "England"],
+    "initialBankroll": "800.00",
+    "description": "Follows form and streaks. Doubles down on hot teams."
+  },
+  {
+    "agentId": 5,
+    "name": "Stars & Stripes",
+    "riskLevel": 4,
+    "style": "ATTACKING",
+    "bankrollPct": 25,
+    "favoriteTeams": ["USA", "Mexico"],
+    "initialBankroll": "700.00",
+    "description": "Patriotic agent with home-field advantage bias for CONCACAF teams."
+  },
+  {
+    "agentId": 6,
+    "name": "Tiki-Taka Bot",
+    "riskLevel": 2,
+    "style": "DATA_DRIVEN",
+    "bankrollPct": 10,
+    "favoriteTeams": ["Spain"],
+    "initialBankroll": "900.00",
+    "description": "Possession-obsessed agent that values ball control stats above all."
+  },
+  {
+    "agentId": 7,
+    "name": "Samurai Edge",
+    "riskLevel": 3,
+    "style": "MOMENTUM",
+    "bankrollPct": 18,
+    "favoriteTeams": ["Japan", "South Korea"],
+    "initialBankroll": "650.00",
+    "description": "Asian football specialist that tracks J-League and K-League form."
+  },
+  {
+    "agentId": 8,
+    "name": "Le Coq",
+    "riskLevel": 2,
+    "style": "DEFENSIVE",
+    "bankrollPct": 8,
+    "favoriteTeams": ["France", "Brazil"],
+    "initialBankroll": "850.00",
+    "description": "Cautious agent that bets on clean sheets and low-scoring affairs."
+  },
+  {
+    "agentId": 9,
+    "name": "YOLO Ronaldo",
+    "riskLevel": 5,
+    "style": "CONTRARIAN",
+    "bankrollPct": 40,
+    "favoriteTeams": ["Brazil", "Argentina", "Germany"],
+    "initialBankroll": "400.00",
+    "description": "Maximum chaos agent. Bets big against favorites for massive payouts."
+  }
+]
