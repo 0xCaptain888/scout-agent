@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useReadContract } from 'wagmi';
+import { CONTRACTS, AGENT_REGISTRY_ABI, PREDICTION_MARKET_ABI, RANKING_BOARD_ABI } from '@/lib/contracts';
 import Leaderboard from '@/components/Leaderboard';
 import LiveTxFeed from '@/components/LiveTxFeed';
 import { Activity, Trophy, Radio, Zap, BarChart3 } from 'lucide-react';
@@ -71,12 +73,37 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
 export default function DashboardPage() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [tick, setTick] = useState(0);
-  const [stats, setStats] = useState({
-    totalAgents: 2847,
-    activeBets: 1293,
-    volumeToday: 42.8,
-    marketsOpen: 6,
+
+  // --- On-chain reads ---
+  const { data: totalAgentsData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'totalSupply',
   });
+
+  const { data: totalMarketsData } = useReadContract({
+    address: CONTRACTS.PredictionMarket,
+    abi: PREDICTION_MARKET_ABI,
+    functionName: 'totalMarkets',
+  });
+
+  const { data: topAgentsData } = useReadContract({
+    address: CONTRACTS.RankingBoard,
+    abi: RANKING_BOARD_ABI,
+    functionName: 'top',
+    args: [BigInt(5)],
+  });
+
+  const onChainAgents = totalAgentsData !== undefined ? Number(totalAgentsData as bigint) : null;
+  const onChainMarkets = totalMarketsData !== undefined ? Number(totalMarketsData as bigint) : null;
+
+  // Derive stats: use on-chain data when available, fallback to placeholder
+  const stats = useMemo(() => ({
+    totalAgents: onChainAgents ?? 0,
+    marketsOpen: onChainMarkets ?? 0,
+    activeBets: 0,    // would need event indexing
+    volumeToday: 0,   // would need event indexing
+  }), [onChainAgents, onChainMarkets]);
 
   // Initialize particles
   useEffect(() => {
@@ -89,7 +116,6 @@ export default function DashboardPage() {
       setTick((t) => t + 1);
       setParticles((prev) =>
         prev.map((p) => {
-          // Move toward target with some jitter
           const dx = p.targetX - p.x;
           const dy = p.targetY - p.y;
           const jitterX = (Math.random() - 0.5) * 2;
@@ -98,7 +124,6 @@ export default function DashboardPage() {
           let newX = p.x + dx * p.speed * 0.02 + jitterX;
           let newY = p.y + dy * p.speed * 0.02 + jitterY;
 
-          // Occasionally reassign a particle to a new outcome
           if (Math.random() < 0.005) {
             const outcomes: Array<'HOME' | 'DRAW' | 'AWAY'> = ['HOME', 'DRAW', 'AWAY'];
             const newOutcome = outcomes[Math.floor(Math.random() * outcomes.length)];
@@ -116,15 +141,6 @@ export default function DashboardPage() {
           return { ...p, x: newX, y: newY };
         })
       );
-
-      // Occasionally update stats
-      if (Math.random() > 0.7) {
-        setStats((prev) => ({
-          ...prev,
-          activeBets: prev.activeBets + Math.floor(Math.random() * 3 - 1),
-          volumeToday: +(prev.volumeToday + Math.random() * 0.1).toFixed(1),
-        }));
-      }
     }, 100);
     return () => clearInterval(interval);
   }, []);
@@ -152,14 +168,12 @@ export default function DashboardPage() {
           <div className="hidden md:flex items-center gap-8">
             {[
               { label: 'Agents', value: stats.totalAgents, color: 'text-neon-green' },
-              { label: 'Active Bets', value: stats.activeBets, color: 'text-neon-orange' },
-              { label: 'Volume Today', value: `${stats.volumeToday}K OKB`, color: 'text-neon-green' },
-              { label: 'Open Markets', value: stats.marketsOpen, color: 'text-white' },
+              { label: 'Markets', value: stats.marketsOpen, color: 'text-neon-orange' },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted">{s.label}</div>
                 <div className={`text-sm font-bold mono data-flicker ${s.color}`}>
-                  {typeof s.value === 'number' ? <AnimatedCounter value={s.value} /> : s.value}
+                  <AnimatedCounter value={s.value} />
                 </div>
               </div>
             ))}
@@ -211,7 +225,6 @@ export default function DashboardPage() {
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
                 style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
               >
-                {/* Zone glow */}
                 <div
                   className="absolute -inset-12 rounded-full opacity-10 animate-pulse-slow"
                   style={{
@@ -231,7 +244,6 @@ export default function DashboardPage() {
 
             {/* Particles */}
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              {/* Connection lines between nearby particles */}
               {particles.map((p, i) => {
                 const nearby = particles.find(
                   (q, j) => j !== i && Math.abs(q.x - p.x) < 8 && Math.abs(q.y - p.y) < 8 && q.outcome === p.outcome
@@ -250,7 +262,6 @@ export default function DashboardPage() {
                   />
                 );
               })}
-              {/* Particle dots */}
               {particles.map((p) => (
                 <circle
                   key={p.id}

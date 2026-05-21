@@ -35,7 +35,8 @@ contract CreateDemoAgents is Script {
 
         // Deposit bankroll for each agent
         uint256 depositAmount = 1000 * 1e6; // 1000 USDT
-        usdt.mint(msg.sender, depositAmount * 3);
+        address deployer = vm.addr(deployerPk);
+        usdt.mint(deployer, depositAmount * 3);
         usdt.approve(address(registry), depositAmount * 3);
 
         registry.depositBankroll(0, depositAmount);

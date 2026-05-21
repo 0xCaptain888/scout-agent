@@ -76,9 +76,10 @@ export const AGENT_REGISTRY_ABI = [
 // ---------------------------------------------------------------------------
 // Contract address (loaded from env or deployments)
 // ---------------------------------------------------------------------------
+const AGENT_REGISTRY_ADDRESS: Address = "0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5";
+
 function getRegistryAddress(): Address {
-  const addr = process.env.AGENT_REGISTRY_ADDRESS;
-  if (!addr) throw new Error("AGENT_REGISTRY_ADDRESS not set");
+  const addr = process.env.AGENT_REGISTRY_ADDRESS || AGENT_REGISTRY_ADDRESS;
   return getAddress(addr);
 }
 

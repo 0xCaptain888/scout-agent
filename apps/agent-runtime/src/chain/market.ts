@@ -139,15 +139,17 @@ export const MATCH_ORACLE_ABI = [
 // ---------------------------------------------------------------------------
 // Contract addresses
 // ---------------------------------------------------------------------------
+const PREDICTION_MARKET_ADDRESS: Address = "0x7058132Ba4aE19983c61590644F2943A3B7fDf80";
+
 function getMarketAddress(): Address {
-  const addr = process.env.PREDICTION_MARKET_ADDRESS;
-  if (!addr) throw new Error("PREDICTION_MARKET_ADDRESS not set");
+  const addr = process.env.PREDICTION_MARKET_ADDRESS || PREDICTION_MARKET_ADDRESS;
   return getAddress(addr);
 }
 
+const MATCH_ORACLE_ADDRESS: Address = "0x494960e21058290BB2F1328b6b837dCF26aA5DCb";
+
 function getOracleAddress(): Address {
-  const addr = process.env.MATCH_ORACLE_ADDRESS;
-  if (!addr) throw new Error("MATCH_ORACLE_ADDRESS not set");
+  const addr = process.env.MATCH_ORACLE_ADDRESS || MATCH_ORACLE_ADDRESS;
   return getAddress(addr);
 }
 

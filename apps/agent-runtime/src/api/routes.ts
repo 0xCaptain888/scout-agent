@@ -15,6 +15,7 @@ import {
   walletOf,
   totalSupply,
 } from "../chain/registry.js";
+import { getLeaderboard, getAgentStats } from "../chain/ranking.js";
 import { decodeGene, STYLE_NAMES } from "../agent/strategy.js";
 import { formatUnits } from "viem";
 
@@ -178,26 +179,47 @@ export async function registerRoutes(app: FastifyInstance) {
     }
   });
 
-  // GET /api/leaderboard - Agent leaderboard (mock for hackathon)
+  // GET /api/leaderboard - Agent leaderboard (on-chain RankingBoard)
   app.get("/api/leaderboard", async () => {
     const total = await safeRead(() => totalSupply(), 0n);
     const count = Math.min(Number(total), 50);
-    const agents = [];
 
-    for (let i = 0; i < count; i++) {
-      const decisions = getDecisionLogs(String(i));
-      const bets = decisions.filter((d) => d.decision.action === "BET");
+    if (count === 0) {
+      return { leaderboard: [] };
+    }
+
+    // Fetch the top agents from the RankingBoard contract
+    const topData = await safeRead(
+      () => getLeaderboard(BigInt(count)),
+      { agentIds: [] as readonly bigint[], pnls: [] as readonly bigint[] },
+    );
+
+    const agents = [];
+    for (let i = 0; i < topData.agentIds.length; i++) {
+      const agentId = Number(topData.agentIds[i]);
+      const pnlRaw = topData.pnls[i];
+
+      // Fetch per-agent stats (wins, losses, totalPnl)
+      const stats = await safeRead(
+        () => getAgentStats(BigInt(agentId)),
+        { wins: 0n, losses: 0n, totalPnl: 0n },
+      );
+
+      const wins = Number(stats.wins);
+      const losses = Number(stats.losses);
+      const totalGames = wins + losses;
+
       agents.push({
-        agentId: i,
-        totalBets: bets.length,
-        totalDecisions: decisions.length,
-        // Mock stats for hackathon
-        winRate: bets.length > 0 ? Math.round(Math.random() * 100) : 0,
-        pnl: bets.length > 0 ? (Math.random() * 200 - 100).toFixed(2) : "0.00",
+        agentId,
+        wins,
+        losses,
+        winRate: totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0,
+        pnl: formatUnits(pnlRaw, 6),
+        pnlRaw: pnlRaw.toString(),
       });
     }
 
-    // Sort by PnL descending
+    // Already sorted by PnL from the contract, but ensure descending order
     agents.sort((a, b) => parseFloat(b.pnl) - parseFloat(a.pnl));
 
     return { leaderboard: agents };

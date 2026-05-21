@@ -2,8 +2,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Zap, Shield, BarChart3, TrendingUp, RefreshCw, Coins } from 'lucide-react';
-import { STRATEGY_STYLES, STYLE_COLORS, encodeStrategyGene, type StrategyStyle } from '@/lib/contracts';
+import { Cpu, Zap, Shield, BarChart3, TrendingUp, RefreshCw, Coins, ExternalLink, Check } from 'lucide-react';
+import {
+  STRATEGY_STYLES, STYLE_COLORS, encodeStrategyGene,
+  CONTRACTS, AGENT_REGISTRY_ABI,
+  type StrategyStyle,
+} from '@/lib/contracts';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { formatEther } from 'viem';
 import clsx from 'clsx';
 
 const TEAMS = [
@@ -19,12 +25,44 @@ const STYLE_ICONS: Record<string, React.ReactNode> = {
   MOMENTUM: <TrendingUp className="h-4 w-4" />,
 };
 
+const EXPLORER_URL = 'https://www.oklink.com/xlayer-test';
+
 export default function MintPage() {
   const [riskLevel, setRiskLevel] = useState(3);
   const [style, setStyle] = useState<StrategyStyle>('DATA_DRIVEN');
   const [bankroll, setBankroll] = useState(25);
   const [selectedTeams, setSelectedTeams] = useState<string[]>(['Brazil', 'France']);
-  const [minting, setMinting] = useState(false);
+
+  // Read mint fee from contract
+  const { data: mintFeeData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'mintFee',
+  });
+
+  // Read total supply from contract
+  const { data: totalSupplyData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'totalSupply',
+  });
+
+  // Write contract: mintAgent
+  const {
+    writeContract,
+    data: txHash,
+    isPending: isMinting,
+    error: mintError,
+    reset: resetMint,
+  } = useWriteContract();
+
+  // Wait for transaction receipt
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  const mintFee = mintFeeData as bigint | undefined;
+  const totalSupply = totalSupplyData as bigint | undefined;
 
   function toggleTeam(team: string) {
     setSelectedTeams((prev) =>
@@ -36,16 +74,29 @@ export default function MintPage() {
     );
   }
 
-  async function handleMint() {
-    setMinting(true);
-    // In production: call AgentRegistry.mintAgent with encoded gene
-    await new Promise((r) => setTimeout(r, 2000));
-    setMinting(false);
-    alert('Agent minted! (Mock)');
+  function handleMint() {
+    const teamIndices = selectedTeams.map((t) => TEAMS.indexOf(t) + 1);
+    const gene = encodeStrategyGene(
+      riskLevel,
+      STRATEGY_STYLES.indexOf(style),
+      bankroll,
+      teamIndices,
+    );
+
+    writeContract({
+      address: CONTRACTS.AgentRegistry,
+      abi: AGENT_REGISTRY_ABI,
+      functionName: 'mintAgent',
+      args: [gene],
+      value: mintFee ?? BigInt(0),
+    });
   }
 
   const styleColor = STYLE_COLORS[style];
   const riskLabels = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
+  const mintFeeFormatted = mintFee ? formatEther(mintFee) : '...';
+  const nextTokenId = totalSupply !== undefined ? Number(totalSupply) + 1 : '???';
+  const busy = isMinting || isConfirming;
 
   return (
     <div className="min-h-screen">
@@ -54,7 +105,12 @@ export default function MintPage() {
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Mint Your <span className="text-neon-green">Scout Agent</span>
           </h1>
-          <p className="text-muted mb-10">Configure your agent&apos;s strategy genes and deploy it on X Layer.</p>
+          <p className="text-muted mb-10">
+            Configure your agent&apos;s strategy genes and deploy it on X Layer.
+            {totalSupply !== undefined && (
+              <span className="ml-2 mono text-neon-green/60">({Number(totalSupply)} agents minted)</span>
+            )}
+          </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-5 gap-8">
@@ -227,7 +283,7 @@ export default function MintPage() {
                   <div className="absolute inset-0 terminal-grid opacity-20" />
                   <div className="relative text-center">
                     <div className="text-6xl font-black mono" style={{ color: styleColor }}>
-                      #{Math.floor(Math.random() * 9000 + 1000)}
+                      #{nextTokenId}
                     </div>
                     <div className="mt-2 text-sm uppercase tracking-[0.3em] text-muted">{style.replace('_', ' ')}</div>
 
@@ -272,32 +328,86 @@ export default function MintPage() {
               <div className="card p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted">Mint Fee</span>
-                  <span className="text-lg font-bold mono text-neon-orange">0.01 OKB</span>
+                  <span className="text-lg font-bold mono text-neon-orange">{mintFeeFormatted} OKB</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted">Gas (estimated)</span>
                   <span className="mono text-muted">~0.001 OKB</span>
                 </div>
-                <button
-                  onClick={handleMint}
-                  disabled={minting}
-                  className={clsx(
-                    'w-full btn-primary flex items-center justify-center gap-2 text-lg',
-                    minting && 'opacity-70 cursor-not-allowed'
-                  )}
-                >
-                  {minting ? (
-                    <>
-                      <div className="h-5 w-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      Minting...
-                    </>
-                  ) : (
-                    <>
-                      <Cpu className="h-5 w-5" />
-                      Mint Agent
-                    </>
-                  )}
-                </button>
+
+                {/* Success state */}
+                {isConfirmed && txHash ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-neon-green text-sm font-medium">
+                      <Check className="h-5 w-5" />
+                      Agent minted successfully!
+                    </div>
+                    <a
+                      href={`${EXPLORER_URL}/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs mono text-neon-green/70 hover:text-neon-green transition-colors break-all"
+                    >
+                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                      {txHash}
+                    </a>
+                    <button
+                      onClick={() => resetMint()}
+                      className="w-full btn-secondary text-sm"
+                    >
+                      Mint Another
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleMint}
+                      disabled={busy}
+                      className={clsx(
+                        'w-full btn-primary flex items-center justify-center gap-2 text-lg',
+                        busy && 'opacity-70 cursor-not-allowed'
+                      )}
+                    >
+                      {isMinting ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                          Confirm in Wallet...
+                        </>
+                      ) : isConfirming ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                          Confirming...
+                        </>
+                      ) : (
+                        <>
+                          <Cpu className="h-5 w-5" />
+                          Mint Agent
+                        </>
+                      )}
+                    </button>
+
+                    {/* Show pending tx hash */}
+                    {txHash && !isConfirmed && (
+                      <a
+                        href={`${EXPLORER_URL}/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-[10px] mono text-muted hover:text-white transition-colors break-all"
+                      >
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        View on OKLink
+                      </a>
+                    )}
+                  </>
+                )}
+
+                {/* Error state */}
+                {mintError && (
+                  <div className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-3 break-all">
+                    {(mintError as Error).message?.slice(0, 200) || 'Transaction failed'}
+                  </div>
+                )}
+
                 <p className="text-[10px] text-muted text-center">
                   Your agent will be deployed as an ERC-721 NFT on X Layer
                 </p>

@@ -15,7 +15,7 @@ export const xlayerTestnet: Chain = {
     default: { http: ['https://testrpc.xlayer.tech'] },
   },
   blockExplorers: {
-    default: { name: 'X Layer Testnet Explorer', url: 'https://www.okx.com/explorer/xlayer-test' },
+    default: { name: 'OKLink X Layer Testnet', url: 'https://www.oklink.com/xlayer-test' },
   },
   testnet: true,
 };

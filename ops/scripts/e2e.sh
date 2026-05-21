@@ -18,10 +18,31 @@ NC='\033[0m'
 
 log()  { echo -e "${CYAN}[e2e]${NC} $1"; }
 ok()   { echo -e "${GREEN}[ ok]${NC} $1"; }
+warn() { echo -e "${YELLOW}[warn]${NC} $1"; }
 fail() { echo -e "${RED}[FAIL]${NC} $1"; EXIT_CODE=1; }
 
 EXIT_CODE=0
 RUNTIME_URL="${SCOUT_AGENT_API:-http://localhost:3001}"
+COMPOSE_FILE="${ROOT_DIR}/ops/docker-compose.yml"
+STARTED_COMPOSE=false
+
+# ---------------------------------------------------------------------------
+# Cleanup on exit
+# ---------------------------------------------------------------------------
+cleanup() {
+  echo ""
+  log "Cleaning up..."
+  if $STARTED_COMPOSE; then
+    docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    ok "Docker services stopped"
+  fi
+  if [ "$EXIT_CODE" -eq 0 ]; then
+    echo -e "${GREEN}Cleanup complete.${NC}"
+  else
+    echo -e "${RED}Cleanup complete (some tests failed).${NC}"
+  fi
+}
+trap cleanup EXIT
 
 # ---------------------------------------------------------------------------
 # Helper: HTTP requests
@@ -37,18 +58,44 @@ api_post() {
 }
 
 # ---------------------------------------------------------------------------
-# Step 0: Pre-flight
+# Step 0: Start local stack via docker-compose
 # ---------------------------------------------------------------------------
 log "=== ScoutAgent E2E Test Suite ==="
 log "Runtime URL: ${RUNTIME_URL}"
 echo ""
 
-# Check runtime is up
-log "Checking runtime health..."
-HEALTH=$(api_get "/health" || echo "")
+log "Starting local stack via docker-compose..."
+docker compose -f "$COMPOSE_FILE" up -d --build
+STARTED_COMPOSE=true
+ok "Docker compose services started"
+
+# ---------------------------------------------------------------------------
+# Step 0b: Deploy contracts & seed demo data
+# ---------------------------------------------------------------------------
+log "Deploying contracts to testnet..."
+if bash "${ROOT_DIR}/ops/scripts/deploy.sh" testnet; then
+  ok "Contracts deployed and demo data seeded"
+else
+  fail "Deployment failed"
+fi
+
+# ---------------------------------------------------------------------------
+# Step 0c: Wait for runtime health
+# ---------------------------------------------------------------------------
+log "Waiting for runtime to become healthy..."
+RETRIES=0
+MAX_RETRIES=30
+while [ $RETRIES -lt $MAX_RETRIES ]; do
+  HEALTH=$(api_get "/health" || echo "")
+  if [ -n "$HEALTH" ]; then
+    break
+  fi
+  RETRIES=$((RETRIES + 1))
+  sleep 2
+done
+
 if [ -z "$HEALTH" ]; then
-  fail "Agent runtime is not responding at ${RUNTIME_URL}"
-  echo -e "${RED}Start the runtime first: pnpm --filter @scout-agent/agent-runtime dev${NC}"
+  fail "Agent runtime did not become healthy after ${MAX_RETRIES} attempts at ${RUNTIME_URL}"
   exit 1
 fi
 ok "Runtime is healthy"

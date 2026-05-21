@@ -3,62 +3,124 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { STYLE_COLORS, type StrategyStyle } from '@/lib/contracts';
-import { ArrowLeft, TrendingUp, TrendingDown, Clock, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useReadContract } from 'wagmi';
+import { formatEther } from 'viem';
+import {
+  STYLE_COLORS, STRATEGY_STYLES, CONTRACTS,
+  AGENT_REGISTRY_ABI, RANKING_BOARD_ABI,
+  type StrategyStyle,
+} from '@/lib/contracts';
+import { ArrowLeft, TrendingUp, Clock, Wallet, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
-// Mock agent data
-function getMockAgent(id: number) {
-  const styles: StrategyStyle[] = ['ATTACKING', 'DEFENSIVE', 'DATA_DRIVEN', 'CONTRARIAN', 'MOMENTUM'];
-  const style = styles[id % 5];
-  return {
-    id,
-    owner: `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
-    style,
-    riskLevel: (id % 5) + 1,
-    bankrollPercent: 10 + (id % 90),
-    reputation: 50 + (id % 50),
-    totalBets: 10 + (id % 100),
-    totalWins: 5 + (id % 60),
-    pnl: (Math.sin(id) * 10),
-    favoriteTeams: ['Brazil', 'France'],
-    strategyGene: `0x${id.toString(16).padStart(16, '0')}`,
-  };
-}
-
-function getMockHistory() {
-  const outcomes = ['HOME', 'DRAW', 'AWAY'];
-  const matches = ['BRA v ARG', 'FRA v GER', 'ENG v ESP', 'POR v NED'];
-  return Array.from({ length: 15 }, (_, i) => {
-    const won = Math.random() > 0.4;
-    return {
-      id: i,
-      match: matches[Math.floor(Math.random() * matches.length)],
-      outcome: outcomes[Math.floor(Math.random() * outcomes.length)],
-      amount: (Math.random() * 2 + 0.1).toFixed(3),
-      won,
-      pnlChange: won ? +(Math.random() * 3).toFixed(3) : -(Math.random() * 2).toFixed(3),
-      timestamp: Date.now() - (i * 3600000) - Math.random() * 1800000,
-    };
-  });
+// Decode strategy gene bits
+function decodeGene(gene: bigint) {
+  const riskLevel = Number(gene & BigInt(0x7));
+  const styleIdx = Number((gene >> BigInt(3)) & BigInt(0x7));
+  const bankrollPct = Number((gene >> BigInt(6)) & BigInt(0x7f));
+  const style = STRATEGY_STYLES[styleIdx] || 'DATA_DRIVEN';
+  return { riskLevel: riskLevel || 1, style: style as StrategyStyle, bankrollPct };
 }
 
 export default function AgentDetailPage() {
   const params = useParams();
-  const agentId = parseInt(params.id as string) || 4521;
-  const agent = getMockAgent(agentId);
-  const history = getMockHistory();
-  const styleColor = STYLE_COLORS[agent.style];
-  const pnlPositive = agent.pnl >= 0;
-  const winRate = agent.totalBets > 0 ? ((agent.totalWins / agent.totalBets) * 100).toFixed(1) : '0';
+  const agentId = parseInt(params.id as string) || 1;
+  const tokenId = BigInt(agentId);
 
   const [depositAmount, setDepositAmount] = useState('');
 
-  // Sparkline
-  const sparkData = Array.from({ length: 20 }, (_, i) => Math.sin(i * 0.5 + agentId) * 5 + agent.pnl * (i / 20));
-  const maxY = Math.max(...sparkData.map(Math.abs)) + 1;
-  const sparkPoints = sparkData.map((v, i) => `${(i / 19) * 280},${30 - (v / maxY) * 25}`).join(' ');
+  // Read agent data from AgentRegistry
+  const { data: geneData, isLoading: loadingGene } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'geneOf',
+    args: [tokenId],
+  });
+
+  const { data: ownerData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'ownerOf',
+    args: [tokenId],
+  });
+
+  const { data: walletData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'walletOf',
+    args: [tokenId],
+  });
+
+  const { data: bankrollData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'bankrollOf',
+    args: [tokenId],
+  });
+
+  const { data: pausedData } = useReadContract({
+    address: CONTRACTS.AgentRegistry,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'isPaused',
+    args: [tokenId],
+  });
+
+  // Read stats from RankingBoard
+  const { data: statsData, isLoading: loadingStats } = useReadContract({
+    address: CONTRACTS.RankingBoard,
+    abi: RANKING_BOARD_ABI,
+    functionName: 'getStats',
+    args: [tokenId],
+  });
+
+  // Parse data
+  const gene = geneData as bigint | undefined;
+  const decoded = gene !== undefined ? decodeGene(gene) : null;
+  const owner = ownerData as `0x${string}` | undefined;
+  const agentWallet = walletData as `0x${string}` | undefined;
+  const bankroll = bankrollData as bigint | undefined;
+  const isPaused = pausedData as boolean | undefined;
+
+  const stats = statsData as [bigint, bigint, bigint] | undefined;
+  const wins = stats ? Number(stats[0]) : 0;
+  const losses = stats ? Number(stats[1]) : 0;
+  const totalPnl = stats ? stats[2] : BigInt(0);
+  const totalBets = wins + losses;
+  const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : '0.0';
+  const pnlValue = Number(formatEther(totalPnl));
+  const pnlPositive = pnlValue >= 0;
+
+  const styleVal = decoded?.style || 'DATA_DRIVEN';
+  const styleColor = STYLE_COLORS[styleVal];
+  const isLoading = loadingGene || loadingStats;
+
+  // Check if agent exists (ownerData would fail if not)
+  const agentExists = owner !== undefined && owner !== '0x0000000000000000000000000000000000000000';
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-neon-green animate-spin" />
+      </div>
+    );
+  }
+
+  if (!agentExists && !isLoading) {
+    return (
+      <div className="min-h-screen">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12">
+          <Link href="/markets" className="inline-flex items-center gap-2 text-sm text-muted hover:text-white mb-6 transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Link>
+          <div className="text-center py-20">
+            <div className="text-6xl font-black mono text-muted mb-4">#{agentId}</div>
+            <p className="text-muted">This agent does not exist on-chain yet.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -79,35 +141,52 @@ export default function AgentDetailPage() {
               >
                 <div className="absolute inset-0 terminal-grid opacity-20" />
                 <div className="relative text-center">
-                  <div className="text-6xl font-black mono" style={{ color: styleColor }}>#{agent.id}</div>
-                  <div className="mt-2 text-sm uppercase tracking-[0.3em] text-muted">{agent.style.replace('_', ' ')}</div>
+                  <div className="text-6xl font-black mono" style={{ color: styleColor }}>#{agentId}</div>
+                  <div className="mt-2 text-sm uppercase tracking-[0.3em] text-muted">{styleVal.replace('_', ' ')}</div>
+                  {isPaused && (
+                    <div className="mt-2 text-xs px-2 py-0.5 rounded-full bg-red-400/10 border border-red-400/30 text-red-400 inline-block">
+                      PAUSED
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Owner</span>
-                  <span className="mono text-xs text-white">{agent.owner.slice(0, 6)}...{agent.owner.slice(-4)}</span>
+                  <span className="mono text-xs text-white">
+                    {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : '...'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">Agent Wallet</span>
+                  <span className="mono text-xs text-neon-green/60">
+                    {agentWallet ? `${agentWallet.slice(0, 6)}...${agentWallet.slice(-4)}` : '...'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Strategy Gene</span>
-                  <span className="mono text-xs text-neon-green/60">{agent.strategyGene.slice(0, 10)}...</span>
+                  <span className="mono text-xs text-neon-green/60">
+                    {gene !== undefined ? `0x${gene.toString(16).padStart(16, '0').slice(0, 10)}...` : '...'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Risk Level</span>
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((l) => (
-                      <div key={l} className={clsx('h-3 w-3 rounded-sm', l <= agent.riskLevel ? (l > 3 ? 'bg-neon-orange' : 'bg-neon-green') : 'bg-border')} />
+                      <div key={l} className={clsx('h-3 w-3 rounded-sm', l <= (decoded?.riskLevel || 0) ? (l > 3 ? 'bg-neon-orange' : 'bg-neon-green') : 'bg-border')} />
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Bankroll %</span>
-                  <span className="mono text-white">{agent.bankrollPercent}%</span>
+                  <span className="mono text-white">{decoded?.bankrollPct || 0}%</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted">Reputation</span>
-                  <span className="mono text-neon-green">{agent.reputation}/100</span>
+                  <span className="text-muted">Bankroll Balance</span>
+                  <span className="mono text-neon-green">
+                    {bankroll !== undefined ? `${formatEther(bankroll)} USDT` : '...'}
+                  </span>
                 </div>
 
                 {/* Bankroll management */}
@@ -119,7 +198,7 @@ export default function AgentDetailPage() {
                     type="number"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="Amount (OKB)"
+                    placeholder="Amount (USDT)"
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm mono focus:outline-none focus:border-neon-green/40"
                   />
                   <div className="grid grid-cols-2 gap-2">
@@ -131,16 +210,16 @@ export default function AgentDetailPage() {
             </div>
           </motion.div>
 
-          {/* Stats + History */}
+          {/* Stats + Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Performance Stats */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'PnL', value: `${pnlPositive ? '+' : ''}${agent.pnl.toFixed(3)}`, suffix: ' OKB', color: pnlPositive ? 'text-neon-green' : 'text-red-400' },
+                  { label: 'PnL', value: `${pnlPositive ? '+' : ''}${pnlValue.toFixed(3)}`, suffix: ' USDT', color: pnlPositive ? 'text-neon-green' : 'text-red-400' },
                   { label: 'Win Rate', value: winRate, suffix: '%', color: 'text-white' },
-                  { label: 'Total Bets', value: agent.totalBets.toString(), color: 'text-white' },
-                  { label: 'Wins', value: agent.totalWins.toString(), color: 'text-neon-green' },
+                  { label: 'Total Bets', value: totalBets.toString(), suffix: '', color: 'text-white' },
+                  { label: 'Wins', value: wins.toString(), suffix: '', color: 'text-neon-green' },
                 ].map((s) => (
                   <div key={s.label} className="card p-4 text-center">
                     <div className="text-xs text-muted uppercase tracking-wider mb-1">{s.label}</div>
@@ -152,46 +231,69 @@ export default function AgentDetailPage() {
               </div>
             </motion.div>
 
-            {/* PnL Chart */}
+            {/* On-Chain Info */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
               <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-neon-green" /> PnL History
+                <TrendingUp className="h-4 w-4 text-neon-green" /> On-Chain Details
               </h3>
-              <svg width="100%" height="60" viewBox="0 0 280 60" preserveAspectRatio="none">
-                <line x1="0" y1="30" x2="280" y2="30" stroke="#1E1E2A" strokeWidth="0.5" />
-                <polyline points={sparkPoints} fill="none" stroke={pnlPositive ? '#00FF87' : '#EF4444'} strokeWidth="2" />
-              </svg>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">Token ID</span>
+                  <span className="mono text-white">{agentId}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">Losses</span>
+                  <span className="mono text-red-400">{losses}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">Status</span>
+                  <span className={clsx('mono text-xs font-medium', isPaused ? 'text-red-400' : 'text-neon-green')}>
+                    {isPaused ? 'Paused' : 'Active'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">Full Gene (hex)</span>
+                  <span className="mono text-xs text-muted break-all">
+                    {gene !== undefined ? `0x${gene.toString(16)}` : '...'}
+                  </span>
+                </div>
+                {owner && (
+                  <div className="text-sm">
+                    <span className="text-muted">Owner: </span>
+                    <a
+                      href={`https://www.oklink.com/xlayer-test/address/${owner}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mono text-xs text-neon-green/70 hover:text-neon-green transition-colors"
+                    >
+                      {owner}
+                    </a>
+                  </div>
+                )}
+                {agentWallet && (
+                  <div className="text-sm">
+                    <span className="text-muted">Agent Wallet: </span>
+                    <a
+                      href={`https://www.oklink.com/xlayer-test/address/${agentWallet}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mono text-xs text-neon-green/70 hover:text-neon-green transition-colors"
+                    >
+                      {agentWallet}
+                    </a>
+                  </div>
+                )}
+              </div>
             </motion.div>
 
-            {/* Decision History */}
+            {/* Info note */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card p-6">
               <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-neon-orange" /> Decision History
+                <Clock className="h-4 w-4 text-neon-orange" /> Activity
               </h3>
-              <div className="space-y-2">
-                {history.map((h) => (
-                  <div key={h.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                    <div className={clsx('w-6 h-6 rounded flex items-center justify-center flex-shrink-0', h.won ? 'bg-neon-green/10' : 'bg-red-400/10')}>
-                      {h.won ? <ArrowUpRight className="h-3 w-3 text-neon-green" /> : <ArrowDownRight className="h-3 w-3 text-red-400" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-white font-medium">{h.match}</span>
-                        <span className={clsx('text-xs mono font-bold', h.outcome === 'HOME' ? 'text-neon-green' : h.outcome === 'AWAY' ? 'text-neon-orange' : 'text-muted')}>
-                          {h.outcome}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-muted mono">{new Date(h.timestamp).toLocaleString()}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs mono text-white">{h.amount} OKB</div>
-                      <div className={clsx('text-[10px] mono font-medium', h.won ? 'text-neon-green' : 'text-red-400')}>
-                        {h.won ? '+' : ''}{h.pnlChange} OKB
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-muted">
+                Decision history is derived from on-chain BetPlaced events. Connect to a subgraph or indexer for full historical data.
+              </p>
             </motion.div>
           </div>
         </div>

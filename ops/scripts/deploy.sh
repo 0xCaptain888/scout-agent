@@ -40,9 +40,10 @@ fi
 
 source "$ENV_FILE"
 
-if [ -z "${OPERATOR_PRIVATE_KEY:-}" ]; then
-  err "OPERATOR_PRIVATE_KEY not set in .env"
+if [ -z "${PRIVATE_KEY:-${OPERATOR_PRIVATE_KEY:-}}" ]; then
+  err "PRIVATE_KEY (or OPERATOR_PRIVATE_KEY) not set in .env"
 fi
+DEPLOY_KEY="${PRIVATE_KEY:-$OPERATOR_PRIVATE_KEY}"
 
 # ---------------------------------------------------------------------------
 # Step 1: Build contracts
@@ -78,7 +79,7 @@ fi
 
 forge script script/Deploy.s.sol:Deploy \
   --rpc-url "$RPC_URL" \
-  --private-key "$OPERATOR_PRIVATE_KEY" \
+  --private-key "$DEPLOY_KEY" \
   --broadcast \
   --verify \
   -vvv
@@ -91,7 +92,7 @@ ok "Contracts deployed to $NETWORK"
 log "Seeding demo matches..."
 forge script script/SeedMatches.s.sol:SeedMatches \
   --rpc-url "$RPC_URL" \
-  --private-key "$OPERATOR_PRIVATE_KEY" \
+  --private-key "$DEPLOY_KEY" \
   --broadcast \
   -vvv
 ok "Demo matches seeded"
@@ -102,7 +103,7 @@ ok "Demo matches seeded"
 log "Creating demo agents..."
 forge script script/CreateDemoAgents.s.sol:CreateDemoAgents \
   --rpc-url "$RPC_URL" \
-  --private-key "$OPERATOR_PRIVATE_KEY" \
+  --private-key "$DEPLOY_KEY" \
   --broadcast \
   -vvv
 ok "Demo agents created"
@@ -139,3 +140,28 @@ echo -e "  Network:        ${CYAN}${NETWORK}${NC}"
 echo ""
 echo -e "  Deployment file: ${CYAN}contracts/deployments/xlayer-${NETWORK}.json${NC}"
 echo ""
+
+# ---------------------------------------------------------------------------
+# Print deployed addresses
+# ---------------------------------------------------------------------------
+DEPLOY_JSON="${ROOT_DIR}/contracts/deployments/xlayer-${NETWORK}.json"
+if [ -f "$DEPLOY_JSON" ]; then
+  log "Deployed contract addresses:"
+  echo ""
+  while IFS='=' read -r key value; do
+    # Skip network and deployer meta fields
+    case "$key" in
+      network|deployer) continue ;;
+    esac
+    printf "  %-20s %s\n" "$key" "$value"
+  done < <(python3 -c "
+import json, sys
+with open('$DEPLOY_JSON') as f:
+    data = json.load(f)
+for k, v in data.items():
+    print(f'{k}={v}')
+" 2>/dev/null || true)
+  echo ""
+else
+  warn "Deployment file not found: $DEPLOY_JSON"
+fi
