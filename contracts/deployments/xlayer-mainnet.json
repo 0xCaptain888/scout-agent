@@ -1,0 +1,14 @@
+{
+  "network": "xlayer-mainnet",
+  "chainId": 196,
+  "deployer": "",
+  "deployedAt": "",
+  "contracts": {
+    "MockUSDT": "",
+    "AgentRegistry": "",
+    "RankingBoard": "",
+    "PredictionMarket": "",
+    "MatchOracle": ""
+  },
+  "note": "Mainnet deployment pending. Will be deployed if OKB budget allows before submission deadline (2026-05-28)."
+}

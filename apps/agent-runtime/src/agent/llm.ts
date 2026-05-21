@@ -49,6 +49,7 @@ export function getSystemPrompt(): string {
 
 // ---------------------------------------------------------------------------
 // DeepSeek Provider (OpenAI-compatible)
+// Bound to DeepSeek V4 via OpenAI-compatible SDK
 // ---------------------------------------------------------------------------
 export class DeepSeekProvider implements LLMProvider {
   private client: OpenAI;
@@ -57,9 +58,10 @@ export class DeepSeekProvider implements LLMProvider {
   constructor() {
     this.client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY || "sk-placeholder",
-      baseURL: "https://api.deepseek.com/v1",
+      baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
     });
     this.model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+    console.log(`[LLM] DeepSeek provider initialized (model: ${this.model})`);
   }
 
   async decide(context: object, systemPrompt: string): Promise<AgentDecision> {

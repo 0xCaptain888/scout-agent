@@ -15,6 +15,7 @@ import {
   ownerOf,
   walletOf,
   totalSupply,
+  pauseAgentOnChain,
 } from "../chain/registry.js";
 import { getLeaderboard, getAgentStats } from "../chain/ranking.js";
 import { decodeGene, STYLE_NAMES } from "../agent/strategy.js";
@@ -147,16 +148,20 @@ export async function registerRoutes(app: FastifyInstance) {
           });
         }
       }
-      // Note: actual pause toggle requires on-chain tx from owner
-      // For hackathon, we return the current state
+      // Execute on-chain pause toggle via operator wallet
+      const txHash = await pauseAgentOnChain(tokenId);
+      const newPaused = !currentlyPaused;
+
       return {
         agentId: req.params.id,
-        paused: currentlyPaused,
-        message: "Use the contract directly to toggle pause state (requires agent owner signature)",
+        paused: newPaused,
+        previousState: currentlyPaused,
+        txHash,
+        explorerUrl: `https://www.oklink.com/xlayer-test/tx/${txHash}`,
       };
     } catch (err) {
       return reply.status(500).send({
-        error: "Pause check failed",
+        error: "Pause toggle failed",
         message: err instanceof Error ? err.message : "Unknown error",
       });
     }

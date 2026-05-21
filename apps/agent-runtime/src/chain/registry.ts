@@ -162,3 +162,13 @@ export async function depositBankroll(tokenId: bigint, amount: bigint): Promise<
     args: [tokenId, amount],
   });
 }
+
+export async function pauseAgentOnChain(tokenId: bigint): Promise<Hex> {
+  const client = getOperatorClient();
+  return client.writeContract({
+    address: getRegistryAddress(),
+    abi: AGENT_REGISTRY_ABI,
+    functionName: "pauseAgent",
+    args: [tokenId],
+  });
+}

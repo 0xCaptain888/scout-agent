@@ -1,5 +1,6 @@
 // ---------------------------------------------------------------------------
 // Odds data fetcher - The Odds API (https://api.the-odds-api.com/v4)
+// Doc ref: Section 7.1.6 — "Store historical snapshots to Postgres"
 // ---------------------------------------------------------------------------
 
 const BASE_URL = "https://api.the-odds-api.com/v4";
@@ -16,6 +17,84 @@ export interface MatchOdds {
   draw: number;
   away: number;
   bookmaker: string;
+}
+
+// ---------------------------------------------------------------------------
+// Postgres odds history persistence
+// ---------------------------------------------------------------------------
+
+import pg from "pg";
+
+let pool: pg.Pool | null = null;
+let dbAvailable = false;
+
+function getPool(): pg.Pool | null {
+  if (pool) return pool;
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) return null;
+  try {
+    pool = new pg.Pool({ connectionString, max: 3 });
+    pool.on("error", (err) => {
+      console.error("[Odds:DB] Pool error:", err.message);
+      dbAvailable = false;
+    });
+    dbAvailable = true;
+    return pool;
+  } catch {
+    return null;
+  }
+}
+
+/** Ensure odds_history table exists (idempotent) */
+async function ensureOddsTable(): Promise<void> {
+  const p = getPool();
+  if (!p) return;
+  try {
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS odds_history (
+        id BIGSERIAL PRIMARY KEY,
+        home_team TEXT NOT NULL,
+        away_team TEXT NOT NULL,
+        sport_key TEXT NOT NULL,
+        bookmaker TEXT NOT NULL,
+        home_odds NUMERIC NOT NULL,
+        draw_odds NUMERIC NOT NULL,
+        away_odds NUMERIC NOT NULL,
+        fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_odds_teams ON odds_history(home_team, away_team);
+      CREATE INDEX IF NOT EXISTS idx_odds_time ON odds_history(fetched_at DESC);
+    `);
+    dbAvailable = true;
+  } catch (err) {
+    console.warn("[Odds:DB] Table creation failed:", err instanceof Error ? err.message : err);
+    dbAvailable = false;
+  }
+}
+
+// Initialize table on module load
+ensureOddsTable().catch(() => {});
+
+/** Persist an odds snapshot to Postgres */
+async function persistOddsSnapshot(
+  homeTeam: string,
+  awayTeam: string,
+  sportKey: string,
+  odds: MatchOdds,
+): Promise<void> {
+  if (!dbAvailable) return;
+  const p = getPool();
+  if (!p) return;
+  try {
+    await p.query(
+      `INSERT INTO odds_history (home_team, away_team, sport_key, bookmaker, home_odds, draw_odds, away_odds)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [homeTeam, awayTeam, sportKey, odds.bookmaker, odds.home, odds.draw, odds.away],
+    );
+  } catch (err) {
+    // Non-fatal: log and continue
+    console.warn("[Odds:DB] Snapshot persist failed:", err instanceof Error ? err.message : err);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +164,8 @@ export async function getOdds(
     if (matchTeams) {
       const mock = [generateMockOdds(matchTeams.home, matchTeams.away)];
       setCache(cacheKey, mock);
+      // Persist mock snapshot to Postgres for history
+      persistOddsSnapshot(matchTeams.home, matchTeams.away, sportKey, mock[0]).catch(() => {});
       return mock;
     }
     return [generateMockOdds("Home Team", "Away Team")];
@@ -137,12 +218,22 @@ export async function getOdds(
       const awayOdds = outcomes.find((o) => o.name === event.away_team)?.price || 3.0;
       const drawOdds = outcomes.find((o) => o.name === "Draw")?.price || 3.5;
 
-      results.push({
+      const oddsEntry: MatchOdds = {
         home: homeOdds,
         draw: drawOdds,
         away: awayOdds,
         bookmaker: bookmaker.key,
-      });
+      };
+
+      results.push(oddsEntry);
+
+      // Persist each real odds snapshot to Postgres
+      persistOddsSnapshot(
+        event.home_team,
+        event.away_team,
+        sportKey,
+        oddsEntry,
+      ).catch(() => {});
     }
 
     if (results.length === 0 && matchTeams) {
@@ -164,4 +255,35 @@ export async function getOdds(
 export async function getMatchOdds(homeTeam: string, awayTeam: string): Promise<MatchOdds> {
   const results = await getOdds("soccer_epl", { home: homeTeam, away: awayTeam });
   return results[0] || generateMockOdds(homeTeam, awayTeam);
+}
+
+/**
+ * Get historical odds snapshots for a match from Postgres.
+ */
+export async function getOddsHistory(
+  homeTeam: string,
+  awayTeam: string,
+  limit: number = 50,
+): Promise<Array<MatchOdds & { fetchedAt: string }>> {
+  const p = getPool();
+  if (!p || !dbAvailable) return [];
+  try {
+    const result = await p.query(
+      `SELECT home_odds, draw_odds, away_odds, bookmaker, fetched_at
+       FROM odds_history
+       WHERE home_team = $1 AND away_team = $2
+       ORDER BY fetched_at DESC
+       LIMIT $3`,
+      [homeTeam, awayTeam, limit],
+    );
+    return result.rows.map((r: any) => ({
+      home: parseFloat(r.home_odds),
+      draw: parseFloat(r.draw_odds),
+      away: parseFloat(r.away_odds),
+      bookmaker: r.bookmaker,
+      fetchedAt: r.fetched_at,
+    }));
+  } catch {
+    return [];
+  }
 }

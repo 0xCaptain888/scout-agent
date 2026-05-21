@@ -7,7 +7,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cron from "node-cron";
 import { registerRoutes } from "./api/routes.js";
-import { tickAllAgents } from "./jobs/tick.js";
+import { tickAllAgents, initTickQueue, shutdownTickQueue } from "./jobs/tick.js";
 import { resolveEndedMarkets } from "./jobs/resolve.js";
 import { queryOnchainOS } from "./data/okx-onchain.js";
 
@@ -35,6 +35,9 @@ async function main() {
   const enableCron = process.env.ENABLE_CRON !== "false";
 
   if (enableCron) {
+    // Initialize BullMQ queue for concurrent agent processing
+    initTickQueue();
+
     // Tick every minute - process all active agents
     cron.schedule("* * * * *", async () => {
       console.log("[Cron] Running agent tick...");
@@ -88,4 +91,17 @@ async function main() {
 main().catch((err) => {
   console.error("[Fatal] Failed to start Agent Runtime:", err);
   process.exit(1);
+});
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("[Shutdown] SIGTERM received, shutting down...");
+  await shutdownTickQueue();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  console.log("[Shutdown] SIGINT received, shutting down...");
+  await shutdownTickQueue();
+  process.exit(0);
 });
