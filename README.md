@@ -69,6 +69,8 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **Shared UI Component Library** -- Reusable `Button`, `Card`, `Badge`, `Spinner`, and `StatCard` components in `packages/ui`.
 - **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API instead of random mock data.
 - **Demo Agents on Testnet** -- 3 pre-minted demo agents with different strategies (Attacking, Defensive, Data-Driven) live on X Layer testnet.
+- **Dashboard Demo Mode** -- Append `?demo=true` to the dashboard URL for pre-scripted animations optimized for video recording, including particle surges, live stats increments, and odds fluctuations.
+- **npm-ready MCP Server** -- `@scoutagent/mcp-server` package is fully configured for npm publishing with dual ESM/CJS exports.
 
 ---
 

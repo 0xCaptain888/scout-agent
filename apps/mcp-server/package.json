@@ -2,16 +2,59 @@
   "name": "@scoutagent/mcp-server",
   "version": "0.1.0",
   "description": "MCP Server for ScoutAgent - AI Scout prediction market on X Layer",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "bin": {
     "scoutagent-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsx src/index.ts",
     "lint": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "scoutagent",
+    "prediction-market",
+    "xlayer",
+    "ai-agent",
+    "nft",
+    "okb",
+    "claude-desktop",
+    "cursor"
+  ],
+  "author": "ScoutAgent Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xCaptain888/scout-agent.git",
+    "directory": "apps/mcp-server"
+  },
+  "homepage": "https://github.com/0xCaptain888/scout-agent/tree/main/apps/mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/0xCaptain888/scout-agent/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

@@ -1,5 +1,7 @@
 # @scoutagent/mcp-server
 
+[![npm](https://img.shields.io/npm/v/@scoutagent/mcp-server)](https://www.npmjs.com/package/@scoutagent/mcp-server)
+
 MCP (Model Context Protocol) Server for **ScoutAgent** -- the AI Scout prediction market on X Layer. This server lets any MCP-compatible client (Claude Desktop, Cursor, Windsurf, etc.) interact with ScoutAgent: browse markets, mint Agent NFTs, place bets, view leaderboards, and more.
 
 ## Quick Start
@@ -188,6 +190,21 @@ src/
     match_data.ts       xlayer://match/{matchId} resource
     agent_strategies.ts xlayer://agent/{agentId}/strategy resource
 ```
+
+## Publishing
+
+To publish the package to npm:
+
+```bash
+npm login
+cd apps/mcp-server
+npm publish --access public
+```
+
+> **Fallback package name:** If the scoped name `@scoutagent/mcp-server` is
+> unavailable or causes issues with npm (e.g., scope not claimed), change the
+> `name` field in `package.json` to `scoutagent-mcp` and publish again. The CLI
+> binary name (`scoutagent-mcp`) stays the same either way.
 
 ## License
 
