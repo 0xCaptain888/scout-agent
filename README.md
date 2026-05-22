@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/X_Layer-Testnet-7B3FE4?style=for-the-badge" alt="X Layer Testnet" />
   <img src="https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity" alt="Solidity" />
   <img src="https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=nextdotjs" alt="Next.js" />
-  <img src="https://img.shields.io/badge/MCP-Server-FF6B35?style=for-the-badge" alt="MCP" />
+  <a href="https://www.npmjs.com/package/@scoutagent/mcp-server"><img src="https://img.shields.io/npm/v/@scoutagent/mcp-server?style=for-the-badge&label=MCP%20Server&color=CB3837&logo=npm" alt="npm" /></a>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT" />
 </p>
 
@@ -130,7 +130,7 @@ Three reasons this mechanism only works at this scale on a flagship sporting eve
 - **Agent Detail with PnL Charts** -- Decision history from on-chain `BetPlaced` events, SVG-based cumulative PnL curve, badge display, and bankroll deposit/withdraw transactions.
 - **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing, including badge count and prize pool status. The root layout includes full OpenGraph and Twitter Card meta tags with `@ScoutAgent_XL` handles, `og:image`, `og:url`, and `og:locale` for maximum social reach.
 - **SIWE Authentication** -- All write API endpoints require Sign-In with Ethereum (EIP-4361) verification. The runtime parses SIWE messages, verifies signatures via `viem`, enforces nonce replay protection, and checks message expiry. Owner-only endpoints additionally verify on-chain ownership.
-- **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command. npm-ready with dual ESM/CJS exports.
+- **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command. Published on [npm](https://www.npmjs.com/package/@scoutagent/mcp-server) with dual ESM/CJS exports.
 - **Dashboard Demo Mode** -- Append `?demo=true` for pre-scripted animations optimized for video recording.
 - **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API with configurable mock fallback.
 - **Shared UI Component Library** -- Reusable `Button`, `Card`, `Badge`, `Spinner`, and `StatCard` components in `packages/ui`.
@@ -323,6 +323,8 @@ The complete economic loop is live on-chain: **mint -> fund -> bet -> resolve ->
 
 ## MCP Server
 
+**Status:** Published on npm &middot; [![npm](https://img.shields.io/npm/v/@scoutagent/mcp-server)](https://www.npmjs.com/package/@scoutagent/mcp-server) [![Downloads](https://img.shields.io/npm/dt/@scoutagent/mcp-server)](https://www.npmjs.com/package/@scoutagent/mcp-server)
+
 Query ScoutAgent directly from **Claude Desktop** or **Cursor** with one command:
 
 ```bash
@@ -385,17 +387,20 @@ Add to `.cursor/mcp.json`:
 | `xlayer://agent/{agentId}/strategy` | Agent strategy gene as machine-readable JSON |
 | `xlayer://leaderboard/current` | Current leaderboard snapshot |
 
-### Publishing to npm
+### Published on npm
 
-The package is fully configured for npm publishing. When ready:
+The MCP Server is published and available on npm:
 
 ```bash
-cd apps/mcp-server
-npm login
-npm publish --access public
+# Install and run directly
+npx -y @scoutagent/mcp-server
+
+# Or install globally
+npm install -g @scoutagent/mcp-server
+scoutagent-mcp
 ```
 
-Fallback package name if `@scoutagent/mcp-server` has scope issues: `scoutagent-mcp`.
+Package: [`@scoutagent/mcp-server`](https://www.npmjs.com/package/@scoutagent/mcp-server)
 
 See the full [MCP Guide](docs/MCP_GUIDE.md) for detailed usage.
 
