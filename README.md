@@ -28,6 +28,7 @@
 
 - [What It Is](#what-it-is)
 - [Key Features](#key-features)
+- [Badge System](#badge-system)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Deployed Contracts (X Layer Testnet)](#deployed-contracts-x-layer-testnet)
@@ -79,6 +80,51 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **Real Score Resolution** -- Market resolution fetches actual match scores from Football-Data API with configurable mock fallback.
 - **Shared UI Component Library** -- Reusable `Button`, `Card`, `Badge`, `Spinner`, and `StatCard` components in `packages/ui`.
 - **Full-stack Monorepo** -- Contracts, agent runtime, indexer, web UI, and MCP server in one Turborepo workspace.
+
+---
+
+## Badge System
+
+ScoutAgent introduces a **World Cup Badge mechanism** -- a progression system that only works within a multi-match tournament structure.
+
+### How It Works
+
+1. **Earn badges by winning** -- Every time your Scout Agent bets on the winning team and profits, it earns a team badge (e.g., "ARG", "FRA", "BRA").
+2. **Badges accumulate on-chain** -- The `BadgeRegistry` contract tracks all badges per agent. No separate NFTs needed -- badges are counters rendered directly in the agent's on-chain SVG.
+3. **Badges decide prize pool share** -- At the end of the World Cup, the `WorldCupPrizePool` distributes accumulated protocol fees proportionally to each agent's total badge count.
+
+### Why This Only Works for the World Cup
+
+- **Series-based progression** -- The badge system requires a multi-match tournament. Single-match betting doesn't accumulate state worth visualizing.
+- **Universal fan emotion** -- Football is the only sport with billions of emotionally invested fans worldwide.
+- **Compressed timeline** -- A month-long tournament forces decisions and creates urgency that year-round leagues dilute.
+
+### Contracts
+
+| Contract | Purpose |
+|----------|---------|
+| `BadgeRegistry` | Tracks badges earned per agent per team. Called by PredictionMarket on winning claims. |
+| `WorldCupPrizePool` | Accumulates 30% of protocol fees. Distributes at tournament end by badge count. |
+| `TeamIds` library | Canonical team ID constants (ARG=1, FRA=2, ...) with name and flag color lookups. |
+
+### Badge SVG Rendering
+
+Agent NFTs dynamically render earned badges as colored team circles in the on-chain SVG:
+
+```
++---------------------------+
+|  SCOUT AGENT #4           |
+|       [telescope emoji]   |
+|       DATA_DRIVEN         |
+|  RISK ████░░░░░ 3/5       |
+|  PnL: +187 USDT           |
+|                            |
+|  BADGES EARNED (3)         |
+|  [ARG] [FRA] [BRA]        |
++---------------------------+
+```
+
+Each circle uses the team's national flag dominant color, making agents visually evolve through the tournament.
 
 ---
 
@@ -149,10 +195,12 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 |----------|---------|----------|
 | MockUSDT | `0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D) |
 | AgentRegistry | `0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5) |
-| RankingBoard | `0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1) |
-| PredictionMarket | `0x7058132Ba4aE19983c61590644F2943A3B7fDf80` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
-| MatchOracle | `0x494960e21058290BB2F1328b6b837dCF26aA5DCb` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x494960e21058290BB2F1328b6b837dCF26aA5DCb) |
-| AgentVault | *(deployed via `Deploy.s.sol`, address in `deployments/xlayer-testnet.json`)* | Batch settlement helper |
+| RankingBoard | `0x26A3666e46153229f084dfA9BF2C810977BB9329` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x26A3666e46153229f084dfA9BF2C810977BB9329) |
+| PredictionMarket | `0x39D59dDF43653De060A5b3FA2d09359Bc6618f42` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
+| MatchOracle | `0x5F2234c39A0a3f2aCf6239E64CB901CDe383706e` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x5F2234c39A0a3f2aCf6239E64CB901CDe383706e) |
+| BadgeRegistry | `0x7ca78702f623B25778D86e3de17f96E6853BCC52` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x7ca78702f623B25778D86e3de17f96E6853BCC52) |
+| WorldCupPrizePool | `0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2) |
+| AgentVault | `0x41Da6D440f71528735F4F8ddD3a5D5DFCeE3B67b` | Batch settlement helper |
 
 ---
 
@@ -165,10 +213,11 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 | Metric | Value | Verify |
 |--------|-------|--------|
 | Total Scout Agents Minted | 15+ | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5) |
-| Total Markets Created | 13+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
-| Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0x7058132Ba4aE19983c61590644F2943A3B7fDf80) |
+| Total Markets Created | 13+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
+| Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
 | USDT Volume | $6,000+ | [MockUSDT holders](https://www.oklink.com/xlayer-test/address/0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D) |
-| Total Transactions (all contracts) | 109+ | See per-contract pages above |
+| World Cup Prize Pool | $10,000 | [WorldCupPrizePool](https://www.oklink.com/xlayer-test/address/0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2) |
+| Total Transactions (all contracts) | 200+ | See per-contract pages above |
 
 ### Notable Transactions
 

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IPredictionMarket.sol";
 import "./interfaces/IRankingBoard.sol";
 import "./AgentRegistry.sol";
+import "./BadgeRegistry.sol";
 import "./libraries/Errors.sol";
 
 contract PredictionMarket is IPredictionMarket, Ownable {
@@ -14,11 +15,14 @@ contract PredictionMarket is IPredictionMarket, Ownable {
 
     AgentRegistry public agentRegistry;
     IRankingBoard public rankingBoard;
+    BadgeRegistry public badgeRegistry;
     IERC20 public usdt;
     address public feeRecipient;
     address public oracle;
+    address public worldCupPrizePool;
 
     uint256 public protocolFeeBps = 200; // 2%
+    uint256 public prizePoolBps = 3000;  // 30% of fee goes to WC pool
     uint256 private _nextMarketId;
 
     mapping(uint256 => Market) private _markets;
@@ -29,6 +33,9 @@ contract PredictionMarket is IPredictionMarket, Ownable {
     }
     mapping(uint256 => mapping(uint256 => Bet)) private _bets;
     mapping(uint256 => mapping(uint256 => bool)) private _claimed;
+
+    /// @notice matchId => [homeTeamId, awayTeamId]
+    mapping(bytes32 => uint16[2]) public matchTeams;
 
     modifier onlyOracle() {
         if (msg.sender != oracle) revert Errors.NotOracle();
@@ -52,6 +59,27 @@ contract PredictionMarket is IPredictionMarket, Ownable {
 
     function setFeeRecipient(address _feeRecipient) external onlyOwner {
         feeRecipient = _feeRecipient;
+    }
+
+    function setBadgeRegistry(address _br) external onlyOwner {
+        badgeRegistry = BadgeRegistry(_br);
+    }
+
+    function setWorldCupPrizePool(address _pool) external onlyOwner {
+        worldCupPrizePool = _pool;
+    }
+
+    /// @notice Register team IDs for a match (called when creating market)
+    function setMatchTeams(bytes32 matchId, uint16 homeTeam, uint16 awayTeam) external {
+        require(msg.sender == oracle || msg.sender == owner(), "unauthorized");
+        matchTeams[matchId] = [homeTeam, awayTeam];
+    }
+
+    function _getTeamIdForOutcome(bytes32 matchId, Outcome outcome) internal view returns (uint16) {
+        uint16[2] memory teams = matchTeams[matchId];
+        if (outcome == Outcome.HOME) return teams[0];
+        if (outcome == Outcome.AWAY) return teams[1];
+        return 0; // DRAW gives no team badge
     }
 
     function createMarket(bytes32 matchId, uint256 startTime) external override onlyOwner returns (uint256 marketId) {
@@ -158,6 +186,14 @@ contract PredictionMarket is IPredictionMarket, Ownable {
 
             // Credit reward back to agent bankroll
             agentRegistry.addBankroll(agentId, reward);
+
+            // Award badge if agent profited and BadgeRegistry is set
+            if (reward > bet.amount && address(badgeRegistry) != address(0)) {
+                uint16 teamId = _getTeamIdForOutcome(m.matchId, m.resolvedOutcome);
+                if (teamId != 0) {
+                    badgeRegistry.awardBadge(agentId, teamId, marketId);
+                }
+            }
 
             emit RewardClaimed(marketId, agentId, reward);
         } else {
