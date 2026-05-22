@@ -190,17 +190,18 @@ Each circle uses the team's national flag dominant color, making agents visually
 
 > **Chain:** X Layer Testnet (chainId `195`)
 > **Deployer:** [`0x2F9fDE6B6FB8d7353aB80F082f85F0d70B809C3b`](https://www.oklink.com/xlayer-test/address/0x2F9fDE6B6FB8d7353aB80F082f85F0d70B809C3b)
+> **Badge System:** Deployed -- agents earn team badges on winning bets, badges determine World Cup Prize Pool share
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| MockUSDT | `0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D) |
-| AgentRegistry | `0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5) |
-| RankingBoard | `0x26A3666e46153229f084dfA9BF2C810977BB9329` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x26A3666e46153229f084dfA9BF2C810977BB9329) |
-| PredictionMarket | `0x39D59dDF43653De060A5b3FA2d09359Bc6618f42` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
-| MatchOracle | `0x5F2234c39A0a3f2aCf6239E64CB901CDe383706e` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x5F2234c39A0a3f2aCf6239E64CB901CDe383706e) |
-| BadgeRegistry | `0x7ca78702f623B25778D86e3de17f96E6853BCC52` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x7ca78702f623B25778D86e3de17f96E6853BCC52) |
-| WorldCupPrizePool | `0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2) |
-| AgentVault | `0x41Da6D440f71528735F4F8ddD3a5D5DFCeE3B67b` | Batch settlement helper |
+| MockUSDT | `0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d) |
+| AgentRegistry | `0x634c68e2b4C6999e35c12472F977Daa1669F6607` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x634c68e2b4C6999e35c12472F977Daa1669F6607) |
+| RankingBoard | `0xe76FB0c6De4C6439A6e91739f1f742f45047CEF7` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0xe76FB0c6De4C6439A6e91739f1f742f45047CEF7) |
+| PredictionMarket | `0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| MatchOracle | `0x40B3CC07E09BF464E4E9dfAd36FB128Ce79E939b` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x40B3CC07E09BF464E4E9dfAd36FB128Ce79E939b) |
+| BadgeRegistry | `0x10C26877d055f522c4A99900eb0A50B0070B53F9` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x10C26877d055f522c4A99900eb0A50B0070B53F9) |
+| WorldCupPrizePool | `0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4` | [View on OKLink](https://www.oklink.com/xlayer-test/address/0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4) |
+| AgentVault | `0x6008108eD2069C8c310987E1Fe1fbf46A6fe8fa9` | Batch settlement helper |
 
 ---
 
@@ -212,21 +213,21 @@ Each circle uses the team's national flag dominant color, making agents visually
 
 | Metric | Value | Verify |
 |--------|-------|--------|
-| Total Scout Agents Minted | 15+ | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5) |
-| Total Markets Created | 13+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
-| Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0x39D59dDF43653De060A5b3FA2d09359Bc6618f42) |
-| USDT Volume | $6,000+ | [MockUSDT holders](https://www.oklink.com/xlayer-test/address/0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D) |
-| World Cup Prize Pool | $10,000 | [WorldCupPrizePool](https://www.oklink.com/xlayer-test/address/0x026479885D04382cb8D4BdaC63B8a76BeA43BeA2) |
-| Total Transactions (all contracts) | 200+ | See per-contract pages above |
+| Total Scout Agents Minted | 12+ | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x634c68e2b4C6999e35c12472F977Daa1669F6607) |
+| Total Markets Created | 8+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| USDT Volume | $6,000+ | [MockUSDT holders](https://www.oklink.com/xlayer-test/address/0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d) |
+| World Cup Prize Pool | $10,000 | [WorldCupPrizePool](https://www.oklink.com/xlayer-test/address/0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4) |
+| Total Transactions (all contracts) | 136+ | See per-contract pages above |
 
 ### Notable Transactions
 
 | Action | Description | OKLink |
 |--------|-------------|--------|
-| First Market | ARG vs FRA prediction market created | [tx](https://www.oklink.com/xlayer-test/tx/0x8f2d3f0ea1a49f2f9d9c1533244bb2c6c66edcfa31cd9ca6d9af36a0d7535be4) |
-| First Mint | Agent #3 "ATTACKING" strategy minted (risk 5, 40% bankroll) | [tx](https://www.oklink.com/xlayer-test/tx/0x729958fc1a0a5af324673761db0d8c9e6e3f061e6987da2a996e23cb9006a808) |
-| First Deposit | Agent #3 funded with 500 USDT bankroll | [tx](https://www.oklink.com/xlayer-test/tx/0x4c782a645b609ad9fcb71416697a5c8684c41a73991b652bdbe3b136260bdf72) |
-| First Bet | Agent #3 bets on market via PredictionMarket | [tx](https://www.oklink.com/xlayer-test/tx/0x1575f1eeb684bd580015197a84cabde0b783ab0c21f17efd5e2a7b8938c8cbc0) |
+| First Market | ARG vs FRA prediction market created | [tx](https://www.oklink.com/xlayer-test/tx/0xec0227082e8966c8f53d76caa3e278027bcb7bc1694235f34626700f8cc4dcce) |
+| First Mint | Agent #0 "ATTACKING" strategy minted (risk 5, 40% bankroll) | [tx](https://www.oklink.com/xlayer-test/tx/0x796e8449be8995f3a85f6e0dc3f04a9c002353bf5d0b25fe4da18b4cf526b6ce) |
+| First Deposit | Agent #0 funded with 500 USDT bankroll | [tx](https://www.oklink.com/xlayer-test/tx/0x3d325765a77c21a4180c6e6eb2e4911f1057f76e0c7381c1acc848cb1ab6bb43) |
+| First Bet | Agent #0 bets on market via PredictionMarket | [tx](https://www.oklink.com/xlayer-test/tx/0x931bd1b4efafeb3456940b7dadf1343581a8c5946189edc6db2acff7371c6aa1) |
 
 The Agent Runtime runs continuously in heartbeat mode, generating new transactions every ~5 minutes. Refresh OKLink to see live activity.
 

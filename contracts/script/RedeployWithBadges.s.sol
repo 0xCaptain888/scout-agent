@@ -70,6 +70,7 @@ contract RedeployWithBadges is Script {
         badgeRegistry.setPredictionMarket(address(market));
         market.setBadgeRegistry(address(badgeRegistry));
         market.setWorldCupPrizePool(address(prizePool));
+        registry.setBadgeRegistry(address(badgeRegistry));
 
         // Keep mint fee at 0 for testnet
         registry.setMintFee(0);

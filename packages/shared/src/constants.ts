@@ -45,18 +45,22 @@ export const BLOCK_EXPLORER_URLS = {
 
 export const CONTRACT_ADDRESSES = {
   [xLayerMainnet.id]: {
-    mockUSDT: "0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D" as `0x${string}`,
-    agentRegistry: "0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5" as `0x${string}`,
-    rankingBoard: "0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1" as `0x${string}`,
-    predictionMarket: "0x7058132Ba4aE19983c61590644F2943A3B7fDf80" as `0x${string}`,
-    matchOracle: "0x494960e21058290BB2F1328b6b837dCF26aA5DCb" as `0x${string}`,
+    mockUSDT: "0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d" as `0x${string}`,
+    agentRegistry: "0x634c68e2b4C6999e35c12472F977Daa1669F6607" as `0x${string}`,
+    rankingBoard: "0xe76FB0c6De4C6439A6e91739f1f742f45047CEF7" as `0x${string}`,
+    predictionMarket: "0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa" as `0x${string}`,
+    matchOracle: "0x40B3CC07E09BF464E4E9dfAd36FB128Ce79E939b" as `0x${string}`,
+    badgeRegistry: "0x10C26877d055f522c4A99900eb0A50B0070B53F9" as `0x${string}`,
+    worldCupPrizePool: "0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4" as `0x${string}`,
   },
   [xLayerTestnet.id]: {
-    mockUSDT: "0x0b489F9988C52F72BdEC5F8d55b1fD390B8Cd41D" as `0x${string}`,
-    agentRegistry: "0x6F4DF8979a8f18Ce3fD2ff941e5a3610E5cAfCa5" as `0x${string}`,
-    rankingBoard: "0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1" as `0x${string}`,
-    predictionMarket: "0x7058132Ba4aE19983c61590644F2943A3B7fDf80" as `0x${string}`,
-    matchOracle: "0x494960e21058290BB2F1328b6b837dCF26aA5DCb" as `0x${string}`,
+    mockUSDT: "0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d" as `0x${string}`,
+    agentRegistry: "0x634c68e2b4C6999e35c12472F977Daa1669F6607" as `0x${string}`,
+    rankingBoard: "0xe76FB0c6De4C6439A6e91739f1f742f45047CEF7" as `0x${string}`,
+    predictionMarket: "0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa" as `0x${string}`,
+    matchOracle: "0x40B3CC07E09BF464E4E9dfAd36FB128Ce79E939b" as `0x${string}`,
+    badgeRegistry: "0x10C26877d055f522c4A99900eb0A50B0070B53F9" as `0x${string}`,
+    worldCupPrizePool: "0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4" as `0x${string}`,
   },
 } as const;
 

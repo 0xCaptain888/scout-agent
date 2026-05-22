@@ -11,15 +11,19 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./interfaces/IAgentRegistry.sol";
 import "./libraries/Errors.sol";
 import "./libraries/StrategyGene.sol";
+import "./BadgeRegistry.sol";
+import "./libraries/TeamIds.sol";
 
 contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
     using SafeERC20 for IERC20;
     using Strings for uint256;
+    using TeamIds for uint16;
 
     IERC20 public immutable usdt;
     uint256 public mintFee = 0.01 ether;
     uint256 private _nextTokenId;
     address public market;
+    BadgeRegistry public badgeRegistry;
 
     mapping(uint256 => uint256) private _genes;
     mapping(uint256 => address) private _wallets;
@@ -44,6 +48,10 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
 
     function setMintFee(uint256 fee) external override onlyOwner {
         mintFee = fee;
+    }
+
+    function setBadgeRegistry(address _br) external onlyOwner {
+        badgeRegistry = BadgeRegistry(_br);
     }
 
     function mintAgent(uint256 gene) external payable override returns (uint256 tokenId) {
@@ -130,8 +138,21 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         string memory styleName = style < 5 ? _styleNames[style] : "UNKNOWN";
         string memory styleColor = style < 5 ? _styleColors[style] : "#888888";
 
-        string memory svg = _buildSVG(tokenId, riskLevel, styleName, styleColor, bankrollPct);
-        string memory json = _buildJSON(tokenId, riskLevel, styleName, bankrollPct, svg);
+        // Fetch badges from BadgeRegistry (up to 6 most recent)
+        uint256 badgeCount;
+        BadgeRegistry.Badge[] memory recentBadges;
+        if (address(badgeRegistry) != address(0)) {
+            BadgeRegistry.Badge[] memory allBadges = badgeRegistry.getBadges(tokenId);
+            badgeCount = allBadges.length;
+            uint256 displayCount = badgeCount > 6 ? 6 : badgeCount;
+            recentBadges = new BadgeRegistry.Badge[](displayCount);
+            for (uint256 i = 0; i < displayCount; i++) {
+                recentBadges[i] = allBadges[badgeCount - displayCount + i];
+            }
+        }
+
+        string memory svg = _buildSVG(tokenId, riskLevel, styleName, styleColor, bankrollPct, recentBadges, badgeCount);
+        string memory json = _buildJSON(tokenId, riskLevel, styleName, bankrollPct, badgeCount, svg);
 
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
     }
@@ -141,6 +162,7 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         uint256 riskLevel,
         string memory styleName,
         uint256 bankrollPct,
+        uint256 badgeCount,
         string memory svg
     ) internal pure returns (string memory) {
         return string(abi.encodePacked(
@@ -150,7 +172,8 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
             '"attributes":[',
                 '{"trait_type":"Risk Level","value":', riskLevel.toString(), '},',
                 '{"trait_type":"Style","value":"', styleName, '"},',
-                '{"trait_type":"Bankroll %","value":', bankrollPct.toString(), '}',
+                '{"trait_type":"Bankroll %","value":', bankrollPct.toString(), '},',
+                '{"trait_type":"Badges","value":', badgeCount.toString(), '}',
             ']}'
         ));
     }
@@ -160,19 +183,23 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
         uint256 riskLevel,
         string memory styleName,
         string memory styleColor,
-        uint256 bankrollPct
+        uint256 bankrollPct,
+        BadgeRegistry.Badge[] memory badges,
+        uint256 badgeCount
     ) internal pure returns (string memory) {
         string memory part1 = _svgHeader(tokenId, styleColor);
         string memory part2 = _svgBody(riskLevel, styleName, styleColor, bankrollPct);
-        return string(abi.encodePacked(part1, part2));
+        string memory part3 = _svgBadges(badges, badgeCount);
+        string memory part4 = _svgFooter2();
+        return string(abi.encodePacked(part1, part2, part3, part4));
     }
 
     function _svgHeader(uint256 tokenId, string memory styleColor) internal pure returns (string memory) {
         return string(abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350" viewBox="0 0 350 350">',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="420" viewBox="0 0 350 420">',
             '<defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">',
             '<stop offset="0%" style="stop-color:#0a0a2e"/><stop offset="100%" style="stop-color:#1a1a4e"/></linearGradient></defs>',
-            '<rect width="350" height="350" fill="url(#bg)" rx="20"/>',
+            '<rect width="350" height="420" fill="url(#bg)" rx="20"/>',
             '<text x="175" y="45" font-family="monospace" font-size="22" fill="#fff" text-anchor="middle" font-weight="bold">SCOUT AGENT</text>',
             '<text x="175" y="75" font-family="monospace" font-size="16" fill="', styleColor,
             '" text-anchor="middle">#', tokenId.toString(), '</text>',
@@ -196,18 +223,45 @@ contract AgentRegistry is ERC721, ERC721URIStorage, Ownable, IAgentRegistry {
             '<rect x="40" y="195" width="200" height="12" rx="6" fill="#222"/>',
             '<rect x="40" y="195" width="', riskBarWidth, '" height="12" rx="6" fill="#ff6644"/>',
             '<text x="250" y="205" font-family="monospace" font-size="12" fill="#fff">', riskLevel.toString(), '/5</text>',
-            _svgFooter(bankrollPct, bankrollBarWidth)
+            _svgBankroll(bankrollPct, bankrollBarWidth)
         ));
     }
 
-    function _svgFooter(uint256 bankrollPct, string memory bankrollBarWidth) internal pure returns (string memory) {
+    function _svgBankroll(uint256 bankrollPct, string memory bankrollBarWidth) internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<text x="40" y="240" font-family="monospace" font-size="12" fill="#aaa">BANKROLL %</text>',
             '<rect x="40" y="250" width="200" height="12" rx="6" fill="#222"/>',
             '<rect x="40" y="250" width="', bankrollBarWidth, '" height="12" rx="6" fill="#44aaff"/>',
-            '<text x="250" y="260" font-family="monospace" font-size="12" fill="#fff">', bankrollPct.toString(), '%</text>',
-            '<rect x="30" y="300" width="290" height="1" fill="#333"/>',
-            '<text x="175" y="330" font-family="monospace" font-size="10" fill="#555" text-anchor="middle">ScoutAgent Protocol</text>',
+            '<text x="250" y="260" font-family="monospace" font-size="12" fill="#fff">', bankrollPct.toString(), '%</text>'
+        ));
+    }
+
+    function _svgBadges(BadgeRegistry.Badge[] memory badges, uint256 totalCount) internal pure returns (string memory) {
+        string memory label = string(abi.encodePacked(
+            '<rect x="30" y="280" width="290" height="1" fill="#333"/>',
+            '<text x="40" y="305" font-family="monospace" font-size="12" fill="#aaa">BADGES EARNED (',
+            totalCount.toString(), ')</text>'
+        ));
+
+        string memory circles = "";
+        for (uint256 i = 0; i < badges.length; i++) {
+            string memory cx = (60 + i * 50).toString();
+            string memory color = badges[i].teamId.colorOf();
+            string memory name = badges[i].teamId.nameOf();
+            circles = string(abi.encodePacked(
+                circles,
+                '<circle cx="', cx, '" cy="340" r="16" fill="', color, '" opacity="0.85"/>',
+                '<text x="', cx, '" y="345" font-family="monospace" font-size="8" fill="#fff" text-anchor="middle">', name, '</text>'
+            ));
+        }
+
+        return string(abi.encodePacked(label, circles));
+    }
+
+    function _svgFooter2() internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            '<rect x="30" y="370" width="290" height="1" fill="#333"/>',
+            '<text x="175" y="400" font-family="monospace" font-size="10" fill="#555" text-anchor="middle">ScoutAgent Protocol</text>',
             '</svg>'
         ));
     }

@@ -21,6 +21,7 @@ import { getLeaderboard, getAgentStats } from "../chain/ranking.js";
 import { decodeGene, STYLE_NAMES } from "../agent/strategy.js";
 import { queryOnchainOS } from "../data/okx-onchain.js";
 import { formatUnits } from "viem";
+import { publicClient } from "../chain/client.js";
 
 // ---------------------------------------------------------------------------
 // Helper: safe BigInt contract reads with fallback
@@ -298,5 +299,104 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get("/api/okx/onchain", async () => {
     const status = await queryOnchainOS();
     return status;
+  });
+
+  // ── Badge endpoints ──
+  app.get<{ Params: { id: string } }>('/api/agents/:id/badges', async (req) => {
+    const { id } = req.params;
+    const brAddress = process.env.BADGE_REGISTRY_ADDRESS as `0x${string}`;
+    if (!brAddress) return { badges: [], count: 0 };
+
+    const BADGE_REGISTRY_ABI = [
+      {
+        name: 'getBadges',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [{ name: 'agentId', type: 'uint256' }],
+        outputs: [{
+          name: '',
+          type: 'tuple[]',
+          components: [
+            { name: 'teamId', type: 'uint16' },
+            { name: 'earnedAt', type: 'uint64' },
+            { name: 'marketId', type: 'uint256' },
+          ],
+        }],
+      },
+      {
+        name: 'getBadgeCount',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [{ name: 'agentId', type: 'uint256' }],
+        outputs: [{ name: '', type: 'uint256' }],
+      },
+    ] as const;
+
+    const TEAM_NAMES: Record<number, string> = {
+      1: 'Argentina', 2: 'France', 3: 'Brazil', 4: 'England',
+      5: 'Spain', 6: 'Germany', 7: 'Portugal', 8: 'Netherlands',
+      9: 'Italy', 10: 'Belgium', 11: 'Uruguay', 12: 'Colombia',
+      13: 'Japan', 14: 'South Korea', 15: 'Morocco', 16: 'Senegal',
+      17: 'USA', 18: 'Mexico', 19: 'Croatia', 20: 'Denmark',
+      21: 'Australia', 22: 'Iran', 23: 'Switzerland', 24: 'Sweden',
+    };
+
+    try {
+      const badges = await publicClient.readContract({
+        address: brAddress,
+        abi: BADGE_REGISTRY_ABI,
+        functionName: 'getBadges',
+        args: [BigInt(id)],
+      });
+
+      return {
+        badges: badges.map((b: any) => ({
+          teamId: Number(b.teamId),
+          teamName: TEAM_NAMES[Number(b.teamId)] ?? `Team ${b.teamId}`,
+          earnedAt: Number(b.earnedAt) * 1000,
+          marketId: b.marketId.toString(),
+        })),
+        count: badges.length,
+      };
+    } catch (err) {
+      console.error('[Badges] Error reading badges:', (err as Error).message);
+      return { badges: [], count: 0 };
+    }
+  });
+
+  // Prize pool info
+  app.get('/api/prize-pool', async () => {
+    const poolAddr = process.env.WORLD_CUP_PRIZE_POOL_ADDRESS as `0x${string}`;
+    if (!poolAddr) return { balance: '0', distributed: false };
+
+    const POOL_ABI = [
+      {
+        name: 'poolBalance',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [{ name: '', type: 'uint256' }],
+      },
+      {
+        name: 'distributed',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [{ name: '', type: 'bool' }],
+      },
+    ] as const;
+
+    try {
+      const [balance, distributed] = await Promise.all([
+        publicClient.readContract({ address: poolAddr, abi: POOL_ABI, functionName: 'poolBalance' }),
+        publicClient.readContract({ address: poolAddr, abi: POOL_ABI, functionName: 'distributed' }),
+      ]);
+      return {
+        balance: (Number(balance) / 1e6).toFixed(2),
+        distributed,
+      };
+    } catch (err) {
+      return { balance: '0', distributed: false };
+    }
   });
 }

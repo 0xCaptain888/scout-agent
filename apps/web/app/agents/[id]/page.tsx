@@ -13,6 +13,7 @@ import {
 import { ArrowLeft, TrendingUp, Clock, Wallet, Loader2, ExternalLink, Check, AlertCircle, Activity } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { BadgesSection } from '@/components/BadgesSection';
 
 const EXPLORER_URL = 'https://www.oklink.com/xlayer-test';
 
@@ -811,6 +812,11 @@ export default function AgentDetailPage() {
                   </div>
                 )}
               </div>
+            </motion.div>
+
+            {/* Badges */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
+              <BadgesSection agentId={String(agentId)} />
             </motion.div>
 
             {/* Decision History */}
