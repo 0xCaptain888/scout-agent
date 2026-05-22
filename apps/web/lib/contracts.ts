@@ -5,6 +5,8 @@ export const CONTRACTS = {
   RankingBoard: '0x1EBD6D3e5cA2fBF234Dfd3073E8B682d487E6ff1' as `0x${string}`,
   PredictionMarket: '0x7058132Ba4aE19983c61590644F2943A3B7fDf80' as `0x${string}`,
   MatchOracle: '0x494960e21058290BB2F1328b6b837dCF26aA5DCb' as `0x${string}`,
+  BadgeRegistry: '0x10C26877d055f522c4A99900eb0A50B0070B53F9' as `0x${string}`,
+  WorldCupPrizePool: '0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4' as `0x${string}`,
 } as const;
 
 // ---------- AgentRegistry ABI ----------
@@ -363,3 +365,38 @@ export const STYLE_COLORS: Record<StrategyStyle, string> = {
   CONTRARIAN: '#A855F7',
   MOMENTUM: '#EAB308',
 };
+
+// ---------- BadgeRegistry ABI ----------
+export const BADGE_REGISTRY_ABI = [
+  {
+    name: 'getBadgeCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'agentId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'getBadges',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'agentId', type: 'uint256' }],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple[]',
+        components: [
+          { name: 'teamId', type: 'uint16' },
+          { name: 'earnedAt', type: 'uint64' },
+          { name: 'marketId', type: 'uint256' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'globalTeamBadges',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'teamId', type: 'uint16' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;

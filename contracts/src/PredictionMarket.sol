@@ -124,9 +124,19 @@ contract PredictionMarket is IPredictionMarket, Ownable {
         // Deduct from bankroll
         agentRegistry.deductBankroll(agentId, amount);
 
-        // Transfer fee to recipient
+        // Split fee: 30% to World Cup Prize Pool, 70% to fee recipient
         if (fee > 0) {
-            usdt.safeTransfer(feeRecipient, fee);
+            uint256 toPool = (fee * prizePoolBps) / 10000;
+            uint256 toFeeRecipient = fee - toPool;
+
+            if (toPool > 0 && worldCupPrizePool != address(0)) {
+                usdt.safeTransfer(worldCupPrizePool, toPool);
+            } else {
+                toFeeRecipient = fee; // If no pool set, all fee goes to recipient
+            }
+            if (toFeeRecipient > 0 && feeRecipient != address(0)) {
+                usdt.safeTransfer(feeRecipient, toFeeRecipient);
+            }
         }
 
         // Record bet

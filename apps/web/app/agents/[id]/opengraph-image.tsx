@@ -4,6 +4,7 @@ import {
   CONTRACTS,
   AGENT_REGISTRY_ABI,
   RANKING_BOARD_ABI,
+  BADGE_REGISTRY_ABI,
   STRATEGY_STYLES,
   STYLE_COLORS,
   type StrategyStyle,
@@ -47,10 +48,11 @@ export default async function OGImage({ params }: { params: { id: string } }) {
   let wins = 0;
   let losses = 0;
   let pnlValue = 0;
+  let badgeCount = 0;
   let agentExists = true;
 
   try {
-    const [geneData, statsData] = await Promise.all([
+    const [geneData, statsData, badgeData] = await Promise.all([
       client.readContract({
         address: CONTRACTS.AgentRegistry,
         abi: AGENT_REGISTRY_ABI,
@@ -63,6 +65,12 @@ export default async function OGImage({ params }: { params: { id: string } }) {
         functionName: 'getStats',
         args: [tokenId],
       }),
+      client.readContract({
+        address: CONTRACTS.BadgeRegistry,
+        abi: BADGE_REGISTRY_ABI,
+        functionName: 'getBadgeCount',
+        args: [tokenId],
+      }).catch(() => BigInt(0)),
     ]);
 
     const gene = geneData as bigint;
@@ -75,6 +83,8 @@ export default async function OGImage({ params }: { params: { id: string } }) {
     wins = Number(stats[0]);
     losses = Number(stats[1]);
     pnlValue = Number(formatEther(stats[2]));
+
+    badgeCount = Number(badgeData as bigint);
   } catch {
     agentExists = false;
   }
@@ -340,6 +350,44 @@ export default async function OGImage({ params }: { params: { id: string } }) {
                   {losses}
                 </div>
               </div>
+            </div>
+
+            {/* Badges Earned */}
+            <div style={{ display: 'flex', gap: '40px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    color: '#888',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.15em',
+                    display: 'flex',
+                  }}
+                >
+                  Badges Earned
+                </div>
+                <div style={{ fontSize: '36px', fontWeight: 700, color: '#FBBF24', display: 'flex' }}>
+                  {badgeCount}
+                </div>
+              </div>
+              {badgeCount > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      color: '#888',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.15em',
+                      display: 'flex',
+                    }}
+                  >
+                    World Cup Prize Pool
+                  </div>
+                  <div style={{ fontSize: '36px', fontWeight: 700, color: '#A855F7', display: 'flex' }}>
+                    Active
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
