@@ -122,11 +122,13 @@ Three reasons this mechanism only works at this scale on a flagship sporting eve
 
 - **On-chain AI Agents** -- ERC-721 NFTs with fully on-chain SVG art encoding strategy genes (risk, style, bankroll %).
 - **Autonomous Betting Loop** -- ReAct-style reasoning loop fetches odds, stats, and sentiment, then decides BET or SKIP per fixture.
-- **Prediction Markets** -- Pool-based markets per match with proportional payouts and a 2% protocol fee.
+- **Prediction Markets** -- Pool-based markets per match with proportional payouts and a 2% protocol fee. 30% of fees automatically route to the World Cup Prize Pool.
 - **On-chain Leaderboard** -- `RankingBoard` contract tracks cumulative PnL for every agent, fully verifiable.
+- **Badge System** -- Winning bets earn team badges rendered in the agent's on-chain SVG. Badges accumulate across the tournament and determine each agent's share of the World Cup Prize Pool.
+- **World Cup Prize Pool** -- `WorldCupPrizePool` contract accumulates protocol fees and distributes them at tournament end, proportional to badge count.
 - **Natural Language Interface** -- Tell your agent "I'm betting on Argentina tonight" and it parses intent, confirms, and executes.
-- **Agent Detail with PnL Charts** -- Decision history from on-chain `BetPlaced` events, SVG-based cumulative PnL curve, and bankroll deposit/withdraw transactions.
-- **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing. The root layout includes full OpenGraph and Twitter Card meta tags with `@ScoutAgent_XL` handles, `og:image`, `og:url`, and `og:locale` for maximum social reach.
+- **Agent Detail with PnL Charts** -- Decision history from on-chain `BetPlaced` events, SVG-based cumulative PnL curve, badge display, and bankroll deposit/withdraw transactions.
+- **Dynamic OG Images** -- Each agent page generates a unique 1200x630 OpenGraph preview image via `next/og` for social sharing, including badge count and prize pool status. The root layout includes full OpenGraph and Twitter Card meta tags with `@ScoutAgent_XL` handles, `og:image`, `og:url`, and `og:locale` for maximum social reach.
 - **SIWE Authentication** -- All write API endpoints require Sign-In with Ethereum (EIP-4361) verification. The runtime parses SIWE messages, verifies signatures via `viem`, enforces nonce replay protection, and checks message expiry. Owner-only endpoints additionally verify on-chain ownership.
 - **MCP Server** -- Query agents, leaderboards, and markets from Claude Desktop or Cursor with a single `npx` command. npm-ready with dual ESM/CJS exports.
 - **Dashboard Demo Mode** -- Append `?demo=true` for pre-scripted animations optimized for video recording.
@@ -205,9 +207,10 @@ Each circle uses the team's national flag dominant color, making agents visually
                          +------+--------+         | - PredictionMarket |
                                 |                  | - MatchOracle      |
                          +------v--------+         | - RankingBoard     |
-                         | PostgreSQL    |         +--------------------+
-                         | :5432         |
-                         +---------------+
+                         | PostgreSQL    |         | - BadgeRegistry    |
+                         | :5432         |         | - WorldCupPrizePool|
+                         +---------------+         | - AgentVault       |
+                                                   +--------------------+
 ```
 
 **Data flow:**
@@ -216,9 +219,10 @@ Each circle uses the team's national flag dominant color, making agents visually
 2. Agent Runtime loads strategy genes from `AgentRegistry` on-chain.
 3. Runtime fetches live odds, head-to-head records, and social sentiment from external APIs.
 4. DeepSeek LLM receives a strategy-aware prompt and returns a structured decision.
-5. If BET, the runtime submits a transaction to `PredictionMarket.placeBet()` on X Layer.
+5. If BET, the runtime submits a transaction to `PredictionMarket.placeBet()` on X Layer. 30% of the protocol fee automatically routes to `WorldCupPrizePool`.
 6. After the match, `MatchOracle` posts the final score and the market resolves.
-7. `RankingBoard` updates agent stats. The Indexer writes events to PostgreSQL for the frontend.
+7. Winning agents claim rewards via `claimReward()`, which awards team badges via `BadgeRegistry`.
+8. `RankingBoard` updates agent stats. The Indexer writes events to PostgreSQL for the frontend.
 
 ---
 
@@ -227,7 +231,7 @@ Each circle uses the team's national flag dominant color, making agents visually
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **Network** | X Layer (zkEVM L2 by OKX) | Low-fee EVM-compatible settlement |
-| **Contracts** | Solidity 0.8.24 + Foundry | AgentRegistry, PredictionMarket, MatchOracle, RankingBoard, AgentVault |
+| **Contracts** | Solidity 0.8.24 + Foundry | AgentRegistry, PredictionMarket, MatchOracle, RankingBoard, BadgeRegistry, WorldCupPrizePool, AgentVault |
 | **Agent Runtime** | TypeScript + Fastify | ReAct reasoning loop with LLM integration |
 | **LLM** | DeepSeek v4 (via OpenAI-compatible SDK) | Strategy reasoning and bet decisions |
 | **Frontend** | Next.js 14 + RainbowKit + wagmi + Tailwind CSS | Wallet connection, minting, dashboard |
@@ -260,7 +264,7 @@ Each circle uses the team's national flag dominant color, making agents visually
 
 ## Live On-chain Activity
 
-> Snapshot updated: 2026-05-21. All transactions are verifiable on OKLink.
+> Snapshot updated: 2026-05-22. All transactions are verifiable on OKLink.
 
 ![Live activity on X Layer](docs/images/oklink-activity.png)
 
@@ -555,15 +559,17 @@ scout-agent/
 |       |-- lib/                    # wagmi config, contract ABIs, API client
 |-- contracts/                      # Foundry project
 |   |-- src/
-|   |   |-- AgentRegistry.sol       # ERC-721 agent NFTs with on-chain SVG
-|   |   |-- PredictionMarket.sol    # Pool-based betting markets
+|   |   |-- AgentRegistry.sol       # ERC-721 agent NFTs with on-chain SVG + badges
+|   |   |-- PredictionMarket.sol    # Pool-based betting markets (30% fee to prize pool)
 |   |   |-- MatchOracle.sol         # Score feed + market resolution
 |   |   |-- RankingBoard.sol        # On-chain leaderboard
+|   |   |-- BadgeRegistry.sol       # Badge tracking per agent per team
+|   |   |-- WorldCupPrizePool.sol   # Prize pool distribution by badge count
 |   |   |-- AgentVault.sol          # Bankroll vault / batch settlement
 |   |   |-- MockUSDT.sol            # Testnet ERC-20 token
 |   |   |-- interfaces/             # IAgentRegistry, IPredictionMarket, IMatchOracle, IRankingBoard
-|   |   |-- libraries/              # StrategyGene (bit-packed encoding), Errors (18 custom errors)
-|   |-- script/                     # Deploy.s.sol, SeedMatches.s.sol, CreateDemoAgents.s.sol
+|   |   |-- libraries/              # StrategyGene, TeamIds, Errors (18 custom errors)
+|   |-- script/                     # Deploy.s.sol, DeployFull.s.sol, SimulateActivity, SeedMatches, etc.
 |   |-- test/                       # AgentRegistry.t.sol, PredictionMarket.t.sol, etc. (38 tests)
 |   |-- deployments/                # xlayer-testnet.json with deployed addresses
 |-- packages/
@@ -578,6 +584,11 @@ scout-agent/
 |   |-- ARCHITECTURE.md             # Detailed system architecture
 |   |-- DEMO_SCRIPT.md              # 90-second demo video script
 |   |-- MCP_GUIDE.md                # MCP installation and usage guide
+|   |-- MARKET_VALUE.md             # Quantitative X Layer impact analysis
+|   |-- SECURITY.md                 # Threat model, access control, production path
+|   |-- SUBMISSION.md               # Google Form pre-filled submission content
+|   |-- twitter-log.md              # 7-day Twitter operations plan with tweet copy
+|   |-- images/                     # OKLink screenshots, dashboard demo GIF
 |-- .github/workflows/ci.yml        # CI: contracts build/test + lint + typecheck + build
 |-- .env.example
 |-- pnpm-workspace.yaml
@@ -595,8 +606,8 @@ scout-agent/
 | `/chat` | Natural Language | Input "I'm betting on Argentina" + intent confirmation modal |
 | `/markets` | All Markets | Filter by status, pool distribution, odds display |
 | `/markets/[id]` | Market Detail | Betting UI, outcome selection, live tx feed |
-| `/agents/[id]` | Agent Detail | PnL chart, decision history, bankroll deposit/withdraw |
-| `/dashboard` | Live Dashboard | Particle swarm, leaderboard, live feed (`?demo=true` for recording) |
+| `/agents/[id]` | Agent Detail | PnL chart, decision history, badges earned, bankroll deposit/withdraw |
+| `/dashboard` | Live Dashboard | Particle swarm, leaderboard, X Layer Impact metrics, live feed (`?demo=true` for recording) |
 
 ---
 
@@ -622,6 +633,8 @@ Owner-only endpoints additionally verify that the SIWE signer matches the on-cha
 | `GET` | `/api/markets` | -- | All markets with pool data |
 | `GET` | `/api/markets/:id` | -- | Single market detail |
 | `GET` | `/api/leaderboard` | -- | Ranked agents from RankingBoard |
+| `GET` | `/api/agents/:id/badges` | -- | Badge history for an agent (team, earned date, market) |
+| `GET` | `/api/impact` | -- | X Layer impact metrics (total tx, wallets, volume, prize pool) |
 | `GET` | `/api/stats` | -- | Global statistics (agents, markets, volume) |
 | `GET` | `/api/fixtures` | -- | Upcoming fixtures from Football-Data API |
 | `GET` | `/api/okx/onchain` | -- | OKX OnchainOS status (OKB price + X Layer gas) |
@@ -744,10 +757,10 @@ forge test --match-contract ForkTest --fork-url https://testrpc.xlayer.tech -vvv
 ```
 
 Fork tests validate:
-- All 5 contracts are deployed and have bytecode
+- All 8 contracts are deployed and have bytecode
 - Registry metadata (name, symbol)
-- Contract wiring (PredictionMarket → AgentRegistry, MatchOracle linkage)
-- Full mint → deposit → bet flow against live state
+- Contract wiring (PredictionMarket → AgentRegistry, MatchOracle, BadgeRegistry linkage)
+- Full mint → deposit → bet → resolve → claim → badge flow against live state
 
 ### Slither Static Analysis
 
