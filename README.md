@@ -23,8 +23,6 @@
 </p>
 
 <p align="center">
-  <a href="https://scoutagent.xyz">Live Demo</a> &middot;
-  <a href="https://x.com/ScoutAgent_XL">@ScoutAgent_XL</a> &middot;
   <a href="docs/PITCH.md">Pitch Deck</a> &middot;
   <a href="docs/ARCHITECTURE.md">Architecture</a> &middot;
   <a href="docs/MCP_GUIDE.md">MCP Guide</a> &middot;
