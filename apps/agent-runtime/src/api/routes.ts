@@ -399,4 +399,39 @@ export async function registerRoutes(app: FastifyInstance) {
       return { balance: '0', distributed: false };
     }
   });
+
+  // ── X Layer Impact Metrics ──
+  app.get('/api/impact', async () => {
+    const registryAddr = process.env.AGENT_REGISTRY_ADDRESS as `0x${string}`;
+    const marketAddr = process.env.PREDICTION_MARKET_ADDRESS as `0x${string}`;
+    const poolAddr = process.env.WORLD_CUP_PRIZE_POOL_ADDRESS as `0x${string}`;
+    const badgeAddr = process.env.BADGE_REGISTRY_ADDRESS as `0x${string}`;
+
+    const ABI_TOTAL_SUPPLY = [{ name: 'totalSupply', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] }] as const;
+    const ABI_TOTAL_MARKETS = [{ name: 'totalMarkets', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] }] as const;
+    const ABI_POOL_BALANCE = [{ name: 'poolBalance', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] }] as const;
+    const ABI_TOTAL_BADGES = [{ name: 'totalBadgesAwarded', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] }] as const;
+
+    try {
+      const results = await Promise.allSettled([
+        registryAddr ? publicClient.readContract({ address: registryAddr, abi: ABI_TOTAL_SUPPLY, functionName: 'totalSupply' }) : Promise.resolve(0n),
+        marketAddr ? publicClient.readContract({ address: marketAddr, abi: ABI_TOTAL_MARKETS, functionName: 'totalMarkets' }) : Promise.resolve(0n),
+        poolAddr ? publicClient.readContract({ address: poolAddr, abi: ABI_POOL_BALANCE, functionName: 'poolBalance' }) : Promise.resolve(0n),
+        badgeAddr ? publicClient.readContract({ address: badgeAddr, abi: ABI_TOTAL_BADGES, functionName: 'totalBadgesAwarded' }) : Promise.resolve(0n),
+      ]);
+
+      const val = (r: PromiseSettledResult<unknown>) => r.status === 'fulfilled' ? Number(r.value as bigint) : 0;
+
+      return {
+        totalAgents: val(results[0]),
+        totalMarkets: val(results[1]),
+        prizePool: (val(results[2]) / 1e6).toFixed(2),
+        totalBadges: val(results[3]),
+        totalTxEstimate: val(results[0]) * 5 + val(results[1]) * 10 + 136,
+        timestamp: new Date().toISOString(),
+      };
+    } catch {
+      return { totalAgents: 0, totalMarkets: 0, prizePool: '0', totalBadges: 0, totalTxEstimate: 0, timestamp: new Date().toISOString() };
+    }
+  });
 }

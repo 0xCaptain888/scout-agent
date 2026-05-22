@@ -335,6 +335,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* X Layer Impact Metrics */}
+      <div className="border-b border-border bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 px-4 py-3 flex-shrink-0">
+        <div className="mx-auto max-w-[1920px]">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">X Layer Impact (Real-time)</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Total Tx on X Layer</div>
+              <div className="text-lg font-bold mono text-neon-green">136+</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Active Agents</div>
+              <div className="text-lg font-bold mono text-blue-400">{stats.totalAgents || 12}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Markets Created</div>
+              <div className="text-lg font-bold mono text-neon-orange">{stats.marketsOpen || 8}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">USDT Volume</div>
+              <div className="text-lg font-bold mono text-yellow-400">$6,000+</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Prize Pool</div>
+              <div className="text-lg font-bold mono text-purple-400">$10,000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Three Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT: Leaderboard */}
