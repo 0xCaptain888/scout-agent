@@ -14,12 +14,17 @@
 </p>
 
 <p align="center">
+  <img src="docs/images/dashboard-demo.gif" alt="ScoutAgent Dashboard Demo" width="900" />
+</p>
+
+<p align="center">
   <a href="https://scoutagent.xyz">Live Demo</a> &middot;
   <a href="https://x.com/ScoutAgent_XL">@ScoutAgent_XL</a> &middot;
   <a href="docs/PITCH.md">Pitch Deck</a> &middot;
   <a href="docs/ARCHITECTURE.md">Architecture</a> &middot;
   <a href="docs/MCP_GUIDE.md">MCP Guide</a> &middot;
-  <a href="docs/DEMO_SCRIPT.md">Demo Script</a>
+  <a href="docs/DEMO_SCRIPT.md">Demo Script</a> &middot;
+  <a href="docs/SECURITY.md">Security</a>
 </p>
 
 ---
@@ -44,6 +49,8 @@
 - [Oracle Design](#oracle-design)
 - [OKX OnchainOS Integration](#okx-onchainos-integration)
 - [Testing](#testing)
+- [Security](#security)
+- [MCP Marketplace Submission](#mcp-marketplace-submission)
 - [Team](#team)
 - [License](#license)
 
@@ -796,6 +803,31 @@ Configuration: [`apps/web/playwright.config.ts`](apps/web/playwright.config.ts)
 ```
 
 Covers: deploy → seed data → contract tests → API tests (mint, bet, leaderboard) → MCP build → TypeScript checks → Playwright E2E → Slither analysis.
+
+---
+
+## Security
+
+A comprehensive security analysis is available at [docs/SECURITY.md](docs/SECURITY.md), covering:
+
+- **Threat model** -- 9 in-scope threats with specific mitigations (oracle manipulation, reentrancy, badge inflation, prize pool drain, etc.)
+- **Access control matrix** -- Every privileged function mapped to its caller and modifier
+- **Production path** -- 8 mandatory upgrades for mainnet deployment (Chainlink oracle, KMS key management, UUPS proxies, multi-sig pause, external audit)
+- **Slither findings** -- Static analysis results and known non-blocking issues
+- **Dependency security** -- All on-chain dependencies pinned via forge submodules
+
+---
+
+## MCP Marketplace Submission
+
+ScoutAgent MCP Server has been submitted to the OKX MCP Marketplace.
+
+- **npm**: `npx @scoutagent/mcp-server`
+- **Submission**: pending review (submitted 2026-05-22)
+- **Track**: World Cup / Sports / AI Agent
+- **Tools**: 7 MCP tools + 2 resources for querying agents, markets, and leaderboards on X Layer
+
+The MCP Server is the first World Cup prediction market integration available for Claude Desktop, Cursor, and other MCP-compatible AI clients.
 
 ---
 
