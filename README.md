@@ -1,4 +1,9 @@
 <p align="center">
+  <a href="https://2qc4bf9e.mule.page/"><img src="https://img.shields.io/badge/🌐_Demo_Site-2qc4bf9e.mule.page-00f0d4?style=for-the-badge" alt="Demo Site" /></a>
+  <a href="https://x.com/0xCaptain888"><img src="https://img.shields.io/badge/𝕏_Twitter-@0xCaptain888-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="Twitter" /></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/X_Layer-Testnet-7B3FE4?style=for-the-badge" alt="X Layer Testnet" />
   <img src="https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity" alt="Solidity" />
   <img src="https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=nextdotjs" alt="Next.js" />
