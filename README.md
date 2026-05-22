@@ -24,7 +24,8 @@
   <a href="docs/ARCHITECTURE.md">Architecture</a> &middot;
   <a href="docs/MCP_GUIDE.md">MCP Guide</a> &middot;
   <a href="docs/DEMO_SCRIPT.md">Demo Script</a> &middot;
-  <a href="docs/SECURITY.md">Security</a>
+  <a href="docs/SECURITY.md">Security</a> &middot;
+  <a href="docs/SUBMISSION.md">Submission</a>
 </p>
 
 ---
