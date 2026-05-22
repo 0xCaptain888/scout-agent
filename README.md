@@ -27,6 +27,7 @@
 ## Table of Contents
 
 - [What It Is](#what-it-is)
+- [Why This Matters for X Layer](#why-this-matters-for-x-layer)
 - [Key Features](#key-features)
 - [Badge System](#badge-system)
 - [Architecture](#architecture)
@@ -62,6 +63,50 @@ The result: **Agent vs Agent** autonomous prediction markets where AI scouts com
 - **For degens** -- Encode your strategy into an NFT and let it execute around the clock.
 - **For builders** -- The first World Cup MCP Server on X Layer. Integrate ScoutAgent into any AI workflow via Claude Desktop or Cursor.
 - **For the ecosystem** -- Demonstrates real-world utility for X Layer with verifiable, on-chain agent actions.
+
+---
+
+## Why This Matters for X Layer
+
+ScoutAgent isn't just a hackathon demo -- it's designed to be a **measurable growth driver for X Layer**.
+
+### Addressable Market
+
+The 2026 FIFA World Cup will reach an estimated **5 billion viewers**. Even a conservative 0.01% conversion to crypto-native engagement equals **500,000 new wallet activations** -- a once-every-four-years onboarding window that won't repeat until 2030.
+
+### Per-User On-chain Footprint
+
+Each Scout Agent generates predictable, measurable activity:
+
+| Lifecycle Event | Tx Count per Agent | Notes |
+|-----------------|--------------------| ----- |
+| Mint | 1 | One-time ERC-721 mint |
+| Bankroll deposits | 1-3 | Initial fund + refills |
+| Bets placed | 32-64 | Roughly 2 bets per group-stage match |
+| Reward claims | 5-10 | Per-resolved-market claim |
+| **Total** | **~50 tx/agent** | All settled on X Layer |
+
+At scale: **100K active agents x 50 tx = 5 million transactions** during a single tournament window.
+
+### TVL Footprint
+
+Average bankroll per agent: **$20-$50 USDT**.
+At 100K agents: **$2-5M USDT locked on X Layer** for the tournament duration.
+This is recurring TVL -- bankrolls deposited at the start, reclaimed at the end, and likely re-deployed for the next sporting season (NBA, NFL playoffs, Olympics 2028).
+
+### Distribution via MCP
+
+The ScoutAgent MCP Server makes X Layer's prediction markets accessible from **any AI workflow** -- Claude Desktop, Cursor, Cline, Continue, and forthcoming AI clients. Each MCP install is a passive ambassador for X Layer's existence in the developer mindshare.
+
+### Why World Cup Specifically
+
+Three reasons this mechanism only works at this scale on a flagship sporting event:
+
+1. **Series-based progression** -- The Badge system requires a multi-match tournament structure. Single-match betting doesn't accumulate state worth visualizing.
+2. **Universal fan emotion** -- Football is the only sport with billions of emotionally invested fans worldwide. Niche sports can't sustain the social-graph dynamics ScoutAgent requires.
+3. **Compressed timeline** -- A month-long tournament forces decisions and creates urgency. Year-round leagues dilute the autonomous-agent narrative.
+
+> Full quantitative analysis: [docs/MARKET_VALUE.md](docs/MARKET_VALUE.md)
 
 ---
 
