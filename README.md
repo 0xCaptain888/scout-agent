@@ -270,12 +270,16 @@ Each circle uses the team's national flag dominant color, making agents visually
 
 | Metric | Value | Verify |
 |--------|-------|--------|
-| Total Scout Agents Minted | 12+ | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x634c68e2b4C6999e35c12472F977Daa1669F6607) |
-| Total Markets Created | 8+ | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| Total Scout Agents Minted | 12 | [AgentRegistry on OKLink](https://www.oklink.com/xlayer-test/address/0x634c68e2b4C6999e35c12472F977Daa1669F6607) |
+| Total Markets Created | 8 | [PredictionMarket on OKLink](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| Markets Resolved | 5 | ARG 2-1 FRA, BRA 0-2 ENG, ESP 1-1 GER, POR 3-0 NED, ITA 1-2 BEL |
 | Total Bets Placed | 66+ | [BetPlaced events](https://www.oklink.com/xlayer-test/address/0xD79bf8C717bb77F7BbA5F7fBae22244976AAfbDa) |
+| Rewards Claimed | 35+ | Full claim cycle across all agents and resolved markets |
+| Badges Awarded | 6 | 6 agents earned team badges (ARG, ENG, POR, BEL) |
+| Agents on Leaderboard | 12 | [RankingBoard](https://www.oklink.com/xlayer-test/address/0xe76FB0c6De4C6439A6e91739f1f742f45047CEF7) |
 | USDT Volume | $6,000+ | [MockUSDT holders](https://www.oklink.com/xlayer-test/address/0x9284B976cB15cD825b1ee771e68E8D38eF38bC8d) |
 | World Cup Prize Pool | $10,000 | [WorldCupPrizePool](https://www.oklink.com/xlayer-test/address/0x090e1010Ef1F8989F41A5Ae354f16266f4D29bc4) |
-| Total Transactions (all contracts) | 136+ | See per-contract pages above |
+| Total Transactions (all contracts) | 170+ | See per-contract pages above |
 
 ### Notable Transactions
 
@@ -285,26 +289,35 @@ Each circle uses the team's national flag dominant color, making agents visually
 | First Mint | Agent #0 "ATTACKING" strategy minted (risk 5, 40% bankroll) | [tx](https://www.oklink.com/xlayer-test/tx/0x796e8449be8995f3a85f6e0dc3f04a9c002353bf5d0b25fe4da18b4cf526b6ce) |
 | First Deposit | Agent #0 funded with 500 USDT bankroll | [tx](https://www.oklink.com/xlayer-test/tx/0x3d325765a77c21a4180c6e6eb2e4911f1057f76e0c7381c1acc848cb1ab6bb43) |
 | First Bet | Agent #0 bets on market via PredictionMarket | [tx](https://www.oklink.com/xlayer-test/tx/0x931bd1b4efafeb3456940b7dadf1343581a8c5946189edc6db2acff7371c6aa1) |
+| First Resolve | Market #0 resolved: ARG 2-1 FRA (HOME wins) | [tx](https://www.oklink.com/xlayer-test/tx/0x322f95b311894fc361bffb753a7ed2eeeb1b61d3786434ecde499669f9abdfd0) |
+| First Badge | Agent #0 earns ARG badge after winning bet on Market #0 | [tx](https://www.oklink.com/xlayer-test/tx/0xd3d9c589af24be58980d1b3aa50d92480cf8999d5e0c4463463872dd45a6a69d) |
+| Biggest Win | Agent #0 claims reward from ARG vs FRA market | [tx](https://www.oklink.com/xlayer-test/tx/0xd3d9c589af24be58980d1b3aa50d92480cf8999d5e0c4463463872dd45a6a69d) |
+| Full Claim Cycle | All 12 agents claimed across 5 resolved markets | [tx](https://www.oklink.com/xlayer-test/tx/0xbcafc2ba8efd892bce21dbec6b9da02a2cb64355401c20b42998df57205889cd) |
 
-The Agent Runtime runs continuously in heartbeat mode, generating new transactions every ~5 minutes. Refresh OKLink to see live activity.
+The complete economic loop is live on-chain: **mint -> fund -> bet -> resolve -> claim -> badge award**. The Agent Runtime runs continuously in heartbeat mode, generating new transactions every ~5 minutes.
 
 ---
 
 ## Demo Agents
 
-15 agents are minted on X Layer Testnet with diverse strategies. Sample agents:
+12 agents are minted on X Layer Testnet with diverse strategies, all actively trading:
 
-| Agent ID | Style | Risk Level | Bankroll % | Notes |
-|----------|-------|------------|------------|-------|
-| #0 | ATTACKING | 5 (Aggressive) | 50% | Original demo agent |
-| #1 | DEFENSIVE | 2 (Conservative) | 20% | Original demo agent |
-| #2 | DATA_DRIVEN | 3 (Balanced) | 35% | Original demo agent |
-| #3 | ATTACKING | 5 (Aggressive) | 40% | Simulated activity agent |
-| #4 | DEFENSIVE | 1 (Very Low) | 10% | Simulated activity agent |
-| #5 | DATA_DRIVEN | 3 (Balanced) | 25% | Simulated activity agent |
-| ... | Various | 1-5 | 10-45% | 12 agents with diverse strategies |
+| Agent ID | Style | Risk | Bankroll % | Badges | W/L |
+|----------|-------|------|------------|--------|-----|
+| #0 | ATTACKING | 5 | 40% | 2 (ARG, POR) | 2W-2L |
+| #1 | DEFENSIVE | 1 | 10% | 1 (ENG) | 1W-2L |
+| #2 | DATA_DRIVEN | 3 | 25% | 0 | 0W-1L |
+| #3 | CONTRARIAN | 4 | 30% | 1 (POR) | 1W-3L |
+| #4 | MOMENTUM | 3 | 20% | 0 | 1W-2L |
+| #5 | ATTACKING | 2 | 15% | 0 | 0W-2L |
+| #6 | DEFENSIVE | 5 | 45% | 0 | 1W-2L |
+| #7 | DATA_DRIVEN | 2 | 18% | 0 | 0W-2L |
+| #8 | CONTRARIAN | 4 | 28% | 1 (ENG) | 1W-2L |
+| #9 | MOMENTUM | 3 | 22% | 0 | 0W-2L |
+| #10 | ATTACKING | 1 | 12% | 1 (POR) | 1W-2L |
+| #11 | DATA_DRIVEN | 4 | 35% | 1 (BEL) | 1W-0L |
 
-13 markets are seeded on-chain covering both resolved and open future markets.
+8 markets seeded on-chain: 5 resolved (ARG-FRA, BRA-ENG, ESP-GER, POR-NED, ITA-BEL), 3 open for future bets.
 
 ---
 
