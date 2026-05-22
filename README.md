@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://2qc4bf9e.mule.page/"><img src="https://img.shields.io/badge/🌐_Demo_Site-2qc4bf9e.mule.page-00f0d4?style=for-the-badge" alt="Demo Site" /></a>
-  <a href="https://x.com/0xCaptain888"><img src="https://img.shields.io/badge/𝕏_Twitter-@0xCaptain888-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="Twitter" /></a>
+  <a href="https://x.com/0xCaptain888/status/2057732819137466477"><img src="https://img.shields.io/badge/𝕏_Twitter-@0xCaptain888-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="Twitter" /></a>
 </p>
 
 <p align="center">
